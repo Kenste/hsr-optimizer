@@ -6,6 +6,7 @@ import Plot from 'react-plotly.js'
 import RelicPreview from './RelicPreview'
 import { Constants, Stats } from 'lib/constants'
 import RelicModal from './RelicModal'
+import BruteForceModal from './BruteForceModal'
 import { RelicScorer } from 'lib/relicScorer'
 import { Gradient } from 'lib/gradient'
 import { Message } from 'lib/message'
@@ -95,6 +96,7 @@ export default function RelicsTab() {
   const [selectedRelic, setSelectedRelic] = useState()
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [addModalOpen, setAddModalOpen] = useState(false)
+  const [bruteforceModalOpen, setBruteforceModalOpen] = useState(false)
 
   const [relicInsight, setRelicInsight] = useState('buckets')
   const relicInsightOptions = [
@@ -314,6 +316,12 @@ export default function RelicsTab() {
     Message.success('Successfully deleted relic')
   }
 
+  function createArtifactsClicked() {
+    console.log("TODO")
+    Message.warning('Not yet implemented!')
+    setBruteforceModalOpen(true)
+  }
+
   const focusCharacter = window.store.getState().scoringAlgorithmFocusCharacter
   let score
   if (focusCharacter) {
@@ -352,6 +360,7 @@ export default function RelicsTab() {
 
   return (
     <Flex style={{ width: 1350, marginBottom: 100 }}>
+      <BruteForceModal onOk={onEditOk} setOpen={setBruteforceModalOpen} open={bruteforceModalOpen} />
       <RelicModal selectedRelic={selectedRelic} type="add" onOk={onAddOk} setOpen={setAddModalOpen} open={addModalOpen} />
       <RelicModal selectedRelic={selectedRelic} type="edit" onOk={onEditOk} setOpen={setEditModalOpen} open={editModalOpen} />
       <Flex vertical gap={10}>
@@ -379,6 +388,9 @@ export default function RelicsTab() {
           />
         </div>
         <Flex gap={10}>
+          <Button type="primary" onClick={createArtifactsClicked} style={{ width: '150px' }}>
+            Bruteforce Artifacts
+          </Button>
           <Button type="primary" onClick={editClicked} style={{ width: '150px' }}>
             Edit Relic
           </Button>
