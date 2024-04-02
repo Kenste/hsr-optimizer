@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import { Button, Flex, Form, Image, InputNumber, Modal, Radio, Select } from 'antd'
 import React, { useEffect, useMemo, useState } from 'react'
-import { Constants } from 'lib/constants'
+import { Constants, SubStatValues } from 'lib/constants'
 import { HeaderText } from './HeaderText'
 import { RelicAugmenter } from 'lib/relicAugmenter'
 import { Message } from 'lib/message'
@@ -138,6 +138,53 @@ export default function RelicModal(props) {
     }
 
     // TODO: build all relics, i.e. the bruteforce logic
+    // 1. generate Substat subsets
+    const subsets = []
+    generateSubsets(x.subStats, 4, 0, [], subsets);
+    console.log('subsets', subsets)
+    // 2. generate all upgrade variation for each subset
+    subsets.map(combination => combination.map((str) => ({stat: str}))
+    ).forEach(combination => {
+      const allUpgrades = [];
+      // console.log(combination)
+      assignUpgrades(combination, allUpgrades);
+      // console.log('upgrades', allUpgrades)
+      allUpgrades.forEach(upgrade => {
+        for (let _set of x.set) {
+          for (let _mainStat of x.mainStats) {
+            if (overlappingStats(_mainStat, upgrade)) {
+              continue
+            }
+            // create relic with given set etc.
+            console.log("create")
+            let relic = {
+              equippedBy: 'None',
+              enhance: 15,
+              grade: 5,
+              part: x.part,
+              set: _set,
+              main: {
+                stat: _mainStat,
+                value: Math.floor(Constants.MainStatsValues[_mainStat][5]['base'] + Constants.MainStatsValues[_mainStat][5]['increment'] * 15),
+              },
+            }
+            // TODO: substats stuff
+            for (let substat of upgrade) {
+              substat.value = SubStatValues[substat.stat][5].high * (1 + substat.value)
+            }
+            relic.substats = upgrade
+            RelicAugmenter.augment(relic)
+
+            console.log('Completed relic', relic)
+            DB.setRelic(relic)
+          }
+        }
+      })
+    })
+    setRelicRows(DB.getRelics())
+    SaveState.save()
+    props.setOpen(false)
+    // 3. add each upgrade variation to all relics
     return Message.error('Brute force is not yet implemented!')
     let relic = {
       equippedBy: x.equippedBy == 'None' ? undefined : x.equippedBy,
@@ -332,4 +379,49 @@ RelicModal.propTypes = {
   onOk: PropTypes.func,
   setOpen: PropTypes.func,
   open: PropTypes.bool,
+}
+
+function generateSubsets(arr, subsetSize, startIndex, currentSubset, result) {
+  if (currentSubset.length === subsetSize) {
+      result.push([...currentSubset]); // Add a copy of currentSubset to result
+      return;
+  }
+
+  for (let i = startIndex; i < arr.length; i++) {
+      currentSubset.push(arr[i]); // Include current element in subset
+      generateSubsets(arr, subsetSize, i + 1, currentSubset, result); // Recur with next index
+      currentSubset.pop(); // Backtrack: Remove last element to try other combinations
+  }
+}
+
+function assignUpgrades(subStats, result, remainingUpgrades = 5, currentPoint = 0) {
+  if (remainingUpgrades) {
+    for (let i = currentPoint; i < subStats.length; i++) {
+      const subStat = subStats[i];
+        if (!subStat.value) {
+          subStat.value = 0;
+        }
+
+        subStat.value++;
+        assignUpgrades(subStats, result, remainingUpgrades - 1, i);
+        subStat.value--;
+    }
+  } else {
+    // add current to result
+    const ret = [];
+    for (let subStat of subStats) {
+      const actualStat = { stat: subStat.stat, value: subStat.value ? subStat.value : 0 };
+      ret.push(actualStat);
+    }
+    result.push(ret);
+  }
+}
+
+function overlappingStats(mainStat, subStats) {
+  for (let subStat of subStats) {
+      if (mainStat === subStat.stat) {
+          return true;
+      }
+  }
+  return false;
 }
