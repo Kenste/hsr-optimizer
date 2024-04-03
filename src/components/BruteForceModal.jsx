@@ -137,25 +137,26 @@ export default function RelicModal(props) {
       }
     }
 
-    // TODO: build all relics, i.e. the bruteforce logic
-    // 1. generate Substat subsets
     const subsets = []
     generateSubsets(x.subStats, 4, 0, [], subsets);
     console.log('subsets', subsets)
-    // 2. generate all upgrade variation for each subset
+    // change the stat string to be an object with stat and value (value is added when stat is upgraded)
     subsets.map(combination => combination.map((str) => ({stat: str}))
     ).forEach(combination => {
       const allUpgrades = [];
-      // console.log(combination)
       assignUpgrades(combination, allUpgrades);
-      // console.log('upgrades', allUpgrades)
       allUpgrades.forEach(upgrade => {
+        // convert the upgrade count to actual stat values
+        for (let substat of upgrade) {
+          substat.value = SubStatValues[substat.stat][5].high * (1 + substat.value)
+        }
+
         for (let _set of x.set) {
           for (let _mainStat of x.mainStats) {
             if (overlappingStats(_mainStat, upgrade)) {
               continue
             }
-            // create relic with given set etc.
+            // create relic with given set, stats, etc.
             console.log("create")
             let relic = {
               equippedBy: 'None',
@@ -168,10 +169,6 @@ export default function RelicModal(props) {
                 value: Math.floor(Constants.MainStatsValues[_mainStat][5]['base'] + Constants.MainStatsValues[_mainStat][5]['increment'] * 15),
               },
             }
-            // TODO: substats stuff
-            for (let substat of upgrade) {
-              substat.value = SubStatValues[substat.stat][5].high * (1 + substat.value)
-            }
             relic.substats = upgrade
             RelicAugmenter.augment(relic)
 
@@ -183,53 +180,7 @@ export default function RelicModal(props) {
     })
     setRelicRows(DB.getRelics())
     SaveState.save()
-    props.setOpen(false)
-    // 3. add each upgrade variation to all relics
-    return Message.error('Brute force is not yet implemented!')
-    let relic = {
-      equippedBy: x.equippedBy == 'None' ? undefined : x.equippedBy,
-      enhance: 15,
-      grade: 5,
-      part: x.part,
-      set: x.set,
-      main: {
-        stat: x.mainStatType,
-        value: x.mainStatValue,
-      },
-    }
-    // assign substats
-    let substats = []
-//    if (x.substatType0 != undefined && x.substatValue0 != undefined) {
-//      substats.push({
-//        stat: x.substatType0,
-//        value: x.substatValue0,
-//      })
-//    }
-//    if (x.substatType1 != undefined && x.substatValue1 != undefined) {
-//      substats.push({
-//        stat: x.substatType1,
-//        value: x.substatValue1,
-//      })
-//    }
-//    if (x.substatType2 != undefined && x.substatValue2 != undefined) {
-//      substats.push({
-//        stat: x.substatType2,
-//        value: x.substatValue2,
-//      })
-//    }
-//    if (x.substatType3 != undefined && x.substatValue3 != undefined) {
-//      substats.push({
-//        stat: x.substatType3,
-//        value: x.substatValue3,
-//      })
-//    }
-    relic.substats = substats
-    RelicAugmenter.augment(relic)
-
-    console.log('Completed relic', relic)
-
-    props.onOk(relic)
-    props.setOpen(false)
+    console.log('Finished generating relics')
   }
 
   const onFinishFailed = () => {
@@ -300,7 +251,7 @@ export default function RelicModal(props) {
             Cancel
           </Button>,
           <Button key="submit" type="primary" onClick={handleOk}>
-            Submit
+            Generate
           </Button>,
         ]}
       >
