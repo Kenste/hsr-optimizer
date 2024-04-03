@@ -317,9 +317,18 @@ export default function RelicsTab() {
   }
 
   function createArtifactsClicked() {
-    console.log("TODO")
-    Message.warning('Not yet implemented!')
     setBruteforceModalOpen(true)
+  }
+
+  function deleteBruteforceArtifacts() {
+    const relics = DB.getRelics()
+    relics.filter(relic => relic.id.startsWith('BruteForce')).forEach(relic => DB.deleteRelic(relic.id))
+
+    setRelicRows(DB.getRelics())
+    setSelectedRelic(undefined)
+    SaveState.save()
+    
+    Message.success('Finished removing generated relics')
   }
 
   const focusCharacter = window.store.getState().scoringAlgorithmFocusCharacter
@@ -390,6 +399,9 @@ export default function RelicsTab() {
         <Flex gap={10}>
           <Button type="primary" onClick={createArtifactsClicked} style={{ width: '150px' }}>
             Bruteforce Artifacts
+          </Button>
+          <Button type="primary" onClick={deleteBruteforceArtifacts} style={{ width: '150px' }}>
+            Delete Bruteforce
           </Button>
           <Button type="primary" onClick={editClicked} style={{ width: '150px' }}>
             Edit Relic

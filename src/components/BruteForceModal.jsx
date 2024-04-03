@@ -170,7 +170,8 @@ export default function RelicModal(props) {
               },
             }
             relic.substats = upgrade
-            RelicAugmenter.augment(relic)
+            const tempRelic = RelicAugmenter.augment(relic)
+            tempRelic.id = 'BruteForce-' + tempRelic.id
 
             console.log('Completed relic', relic)
             DB.setRelic(relic)
@@ -181,6 +182,7 @@ export default function RelicModal(props) {
     setRelicRows(DB.getRelics())
     SaveState.save()
     console.log('Finished generating relics')
+    Message.success('Finished generating relics')
   }
 
   const onFinishFailed = () => {
