@@ -159,7 +159,7 @@ export default function RelicModal(props) {
             // create relic with given set, stats, etc.
             console.log("create")
             let relic = {
-              equippedBy: 'None',
+              equippedBy: undefined,
               enhance: 15,
               grade: 5,
               part: x.part,
