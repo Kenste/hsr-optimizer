@@ -103,6 +103,7 @@ export default function RelicModal(props) {
       }
     }
     relicForm.setFieldsValue(defaultValues)
+    onValuesChange(defaultValues)
   }, [props.selectedRelic, props.open, relicForm, props])
 
   useEffect(() => {

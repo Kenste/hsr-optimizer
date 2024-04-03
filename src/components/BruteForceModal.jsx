@@ -73,14 +73,12 @@ export default function RelicModal(props) {
 
   // Head chosen by default
   useEffect(() => {
-    let defaultValues = {
-      // grade: 5,
-      // enhance: 15,
-      part: Constants.Parts.Head,
-      mainStats: [Constants.Stats.HP],
-      // mainStatValue: Math.floor(Constants.MainStatsValues[Constants.Stats.HP][5]['base'] + Constants.MainStatsValues[Constants.Stats.HP][5]['increment'] * 15),
+    const values = relicForm.getFieldValue()
+    if (!values || !values.part) {
+      values.part = Constants.Parts.Head
+      values.mainStats = [Constants.Stats.HP]
     }
-    relicForm.setFieldsValue(defaultValues)
+    onValuesChange(values)
   }, [props.selectedRelic, props.open, relicForm, props])
 
   // selects the first main stat if the options change
