@@ -32,6 +32,7 @@ declare global {
 
     // Debug console access — consolidated from individual window.X exports
     __HSR_DEBUG: Record<string, unknown>
+    __HSR_MCP__?: Record<string, unknown>
 
     title: string
     WEBGPU_DEBUG: boolean

@@ -19,6 +19,7 @@
     "preview": "vite preview",
     "build": "vite build",
     "lint": "oxlint",
+    "mcp": "node mcp/server.mjs",
     "vitest": "vitest --dir src/lib --no-watch --pool=threads",
     "vitest:fast": "vitest --dir src/lib --no-watch --pool=threads --exclude '**/simulations/tests/**/*Orchestrator*'",
     "vitest:silent": "vitest --dir src/lib --no-watch --pool=threads --silent",
@@ -45,6 +46,7 @@
     "@mantine/hooks": "^9.0.2",
     "@mantine/modals": "^9.0.2",
     "@mantine/notifications": "^9.0.2",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@tabler/icons-react": "^3.41.1",
     "@zumer/snapdom": "^2.8.0",
     "ag-grid-community": "^35.2.1",
@@ -65,6 +67,7 @@
     "react-i18next": "^17.0.7",
     "react-selecto": "^1.26.3",
     "recharts": "^3.8.1",
+    "zod": "^4.4.3",
     "zustand": "^5.0.11"
   },
   "devDependencies": {

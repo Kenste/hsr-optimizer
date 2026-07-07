@@ -15,6 +15,7 @@ import { resetShowcaseColors } from 'lib/dev/resetShowcaseColors'
 import { CharacterConverter } from 'lib/importer/characterConverter'
 import { Hint } from 'lib/interactions/hint'
 import { Message } from 'lib/interactions/message'
+import { installHsrMcpBridge } from 'lib/mcp/browserBridge'
 import { BufferPacker } from 'lib/optimization/bufferPacker'
 import { RelicAugmenter } from 'lib/relics/relicAugmenter'
 import { RelicFilters } from 'lib/relics/relicFilters'
@@ -103,6 +104,10 @@ Metadata.initialize()
 SaveState.load(false, false)
 
 void verifyWebgpuSupport(false)
+
+if (new URLSearchParams(window.location.search).get('mcp') === '1') {
+  installHsrMcpBridge()
+}
 
 const defaultErrorRender = ({ error }: FallbackProps) => (
   <div>
