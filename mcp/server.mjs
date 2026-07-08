@@ -6,7 +6,7 @@ import { chromium } from 'playwright'
 import { z } from 'zod/v4'
 import { spawn } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 
 const DEFAULT_PORT = Number(process.env.HSR_MCP_PORT ?? 3210)
@@ -324,6 +324,63 @@ server.registerTool(
     },
   },
   async (input) => jsonResult(await app.call('getCharacterRelics', input)),
+)
+
+server.registerTool(
+  'get_character_equipment',
+  {
+    title: 'Get character equipment',
+    description: 'Return current light cone and equipped relic IDs for a character.',
+    inputSchema: {
+      characterId: z.string().optional(),
+      name: z.string().optional(),
+    },
+  },
+  async (input) => jsonResult(await app.call('getCharacterEquipment', input)),
+)
+
+server.registerTool(
+  'equip_light_cone',
+  {
+    title: 'Equip light cone',
+    description: 'Mutate the active MCP account context in memory by setting a character light cone, level, and superimposition. Does not save/export; call export_account_context to persist to a file.',
+    inputSchema: {
+      characterId: z.string().optional(),
+      name: z.string().optional(),
+      lightConeId: z.string(),
+      level: z.number().int().positive().optional(),
+      superimposition: z.number().int().positive().optional(),
+    },
+  },
+  async (input) => jsonResult(await app.call('equipLightCone', input)),
+)
+
+server.registerTool(
+  'equip_relic',
+  {
+    title: 'Equip relic',
+    description: 'Mutate the active MCP account context in memory by moving one relic to a character. Conflicts move the relic without swapping: previous owners and target slot relics are unequipped. Does not save/export.',
+    inputSchema: {
+      characterId: z.string().optional(),
+      name: z.string().optional(),
+      relicId: z.string(),
+    },
+  },
+  async (input) => jsonResult(await app.call('equipRelic', input)),
+)
+
+server.registerTool(
+  'equip_relic_build',
+  {
+    title: 'Equip relic build',
+    description: 'Mutate the active MCP account context in memory by equipping a set of relic IDs to a character. Conflicts move relics without swapping. Does not save/export.',
+    inputSchema: {
+      characterId: z.string().optional(),
+      name: z.string().optional(),
+      relicIds: z.record(z.string(), z.string()),
+    },
+  },
+  async (input) => jsonResult(await app.call('equipRelicBuild', input)),
 )
 
 server.registerTool(
@@ -664,6 +721,53 @@ server.registerTool(
       offset,
       limit: pageLimit,
       items: includeZeroStats ? items : items.map(trimZeroStats),
+    })
+  },
+)
+
+server.registerTool(
+  'equip_optimization_result',
+  {
+    title: 'Equip optimization result',
+    description: 'Equip a completed optimizer result build to the optimized character in the active MCP context. Uses resultIndex 0 by default. Conflicts move relics without swapping. Does not save/export.',
+    inputSchema: {
+      jobId: z.string(),
+      resultIndex: z.number().int().nonnegative().optional(),
+    },
+  },
+  async ({ jobId, resultIndex = 0 }) => {
+    const job = jobs.get(jobId)
+    if (!job) throw new Error(`Job not found: ${jobId}`)
+    if (job.status !== 'succeeded') throw new Error(`Job is not complete: ${job.status}`)
+    const result = job.results?.[resultIndex]
+    if (!result) throw new Error(`Optimization result not found at index ${resultIndex}`)
+    const characterId = job.startResult?.characterId ?? job.params?.characterId
+    if (!characterId) throw new Error('Could not resolve optimized character for job')
+    return jsonResult(await app.call('equipOptimizationResult', { characterId, relicIds: result.relicIds }))
+  },
+)
+
+server.registerTool(
+  'export_account_context',
+  {
+    title: 'Export account context',
+    description: 'Write the current active MCP account context to an optimizer save JSON file. This is the explicit persistence step for MCP equipment mutations.',
+    inputSchema: {
+      filePath: z.string(),
+    },
+  },
+  async ({ filePath }) => {
+    const exported = await app.call('serializeAccountContext')
+    await writeFile(filePath, exported.json, 'utf8')
+    const exportedAt = exported.exportedAt ?? new Date().toISOString()
+    await app.call('markAccountContextExported', { exportedAt })
+    return jsonResult({
+      filePath,
+      contextId: exported.contextId,
+      characterCount: exported.characterCount,
+      relicCount: exported.relicCount,
+      bytes: exported.bytes,
+      exportedAt,
     })
   },
 )

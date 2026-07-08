@@ -45,10 +45,12 @@ import { LightConeConditionalsResolver } from 'lib/conditionals/resolver/lightCo
 import { simulateBuild } from 'lib/simulations/simulateBuild'
 import type { SimulationRelicByPart } from 'lib/simulations/statSimulationTypes'
 import { getGameMetadata } from 'lib/state/gameMetadata'
+import { serializeMcpAccountContext } from 'lib/mcp/serializeAccountContext'
 import { useGlobalStore } from 'lib/stores/app/appStore'
 import {
   getCharacterById,
   getCharacters,
+  useCharacterStore,
 } from 'lib/stores/character/characterStore'
 import { useOptimizerRequestStore } from 'lib/stores/optimizerForm/useOptimizerRequestStore'
 import { normalizeForm } from 'lib/stores/optimizerForm/optimizerFormConversions'
@@ -57,6 +59,7 @@ import { useOptimizerDisplayStore } from 'lib/stores/optimizerUI/useOptimizerDis
 import {
   getRelicById,
   getRelics,
+  useRelicStore,
 } from 'lib/stores/relic/relicStore'
 import { calculateTeammateSets } from 'lib/tabs/tabOptimizer/optimizerForm/components/teammate/teammateCardUtils'
 import { OptimizerTabController } from 'lib/tabs/tabOptimizer/optimizerTabController'
@@ -74,7 +77,11 @@ import type {
   Teammate,
 } from 'types/form'
 import type { LightConeId } from 'types/lightCone'
-import type { Relic } from 'types/relic'
+import type {
+  Relic,
+  RelicId,
+} from 'types/relic'
+import type { Build } from 'types/savedBuild'
 
 type Identifier = { characterId?: CharacterId, name?: string }
 type ComputeMode = 'auto' | 'gpu' | 'cpu'
@@ -154,6 +161,8 @@ const OPTIMIZER_DISPLAY_KEYS = [
 ] as const
 
 let activeContextId: string | null = null
+let dirtySinceExport = false
+let lastExportedAt: string | null = null
 const optimizerDrafts = new Map<string, OptimizerDraft>()
 
 function deepMerge<T>(base: T, patch: Partial<T> | undefined): T {
@@ -709,10 +718,148 @@ function getTrimmedCharacterDetails(character: Character) {
   }
 }
 
+function setMcpDirty() {
+  dirtySinceExport = true
+}
+
+function summarizeCharacterEquipment(character: Character) {
+  return {
+    characterId: character.id,
+    name: characterName(character.id),
+    lightCone: character.form?.lightCone
+      ? {
+        id: character.form.lightCone,
+        name: lightConeName(character.form.lightCone),
+        level: character.form.lightConeLevel,
+        superimposition: character.form.lightConeSuperimposition,
+      }
+      : null,
+    relicIds: Object.fromEntries(RELIC_PARTS.map((part) => [part, character.equipped?.[part] ?? null])),
+  }
+}
+
+function getRelicOwnerBySlot(relic: Relic): Character | undefined {
+  return getCharacters().find((character) => character.equipped?.[relic.part] === relic.id)
+}
+
+function upsertCharacter(character: Character) {
+  useCharacterStore.getState().setCharacter(character)
+}
+
+function upsertRelic(relic: Relic) {
+  useRelicStore.getState().upsertRelic(relic)
+}
+
+function equipRelicMove(character: Character, relic: Relic) {
+  const beforeTarget = summarizeCharacterEquipment(character)
+  const movedFrom: Array<{ characterId: CharacterId, name: string, part: Parts, relicId: RelicId }> = []
+  const unequippedFromTarget: Array<{ part: Parts, relicId: RelicId }> = []
+  let target = character
+
+  const previousOwners = new Map<CharacterId, Character>()
+  if (relic.equippedBy) {
+    const previousOwner = getCharacterById(relic.equippedBy)
+    if (previousOwner) previousOwners.set(previousOwner.id, previousOwner)
+  }
+  const slotOwner = getRelicOwnerBySlot(relic)
+  if (slotOwner) previousOwners.set(slotOwner.id, slotOwner)
+
+  for (const previousOwner of previousOwners.values()) {
+    if (previousOwner.id === character.id) continue
+    const updatedOwner = {
+      ...previousOwner,
+      equipped: {
+        ...previousOwner.equipped,
+        [relic.part]: previousOwner.equipped?.[relic.part] === relic.id ? undefined : previousOwner.equipped?.[relic.part],
+      },
+    }
+    upsertCharacter(updatedOwner)
+    movedFrom.push({
+      characterId: previousOwner.id,
+      name: characterName(previousOwner.id),
+      part: relic.part,
+      relicId: relic.id,
+    })
+  }
+
+  const currentTargetRelicId = target.equipped?.[relic.part]
+  if (currentTargetRelicId && currentTargetRelicId !== relic.id) {
+    const currentTargetRelic = getRelicById(currentTargetRelicId)
+    if (currentTargetRelic) {
+      upsertRelic({ ...currentTargetRelic, equippedBy: undefined })
+    }
+    unequippedFromTarget.push({ part: relic.part, relicId: currentTargetRelicId })
+  }
+
+  target = {
+    ...target,
+    equipped: {
+      ...target.equipped,
+      [relic.part]: relic.id,
+    },
+  }
+  upsertCharacter(target)
+  upsertRelic({ ...relic, equippedBy: target.id })
+  setMcpDirty()
+
+  return {
+    characterId: target.id,
+    name: characterName(target.id),
+    part: relic.part,
+    relicId: relic.id,
+    before: beforeTarget,
+    after: summarizeCharacterEquipment(getCharacterById(target.id) ?? target),
+    movedFrom,
+    unequippedFromTarget,
+  }
+}
+
+function normalizeBuild(input: Partial<Record<Parts, string | null | undefined>>): Build {
+  const build: Build = {}
+  for (const part of RELIC_PARTS) {
+    const relicId = input[part]
+    if (relicId) build[part] = relicId
+  }
+  return build
+}
+
+function equipBuildMove(character: Character, build: Build) {
+  const equipped = []
+  for (const part of RELIC_PARTS) {
+    const relicId = build[part]
+    if (!relicId) continue
+    const relic = getRelicById(relicId)
+    if (!relic) throw new Error(`Relic not found: ${relicId}`)
+    if (relic.part !== part) throw new Error(`Relic ${relicId} is ${relic.part}, but was provided for ${part}`)
+    const currentCharacter = getCharacterById(character.id)
+    if (!currentCharacter) throw new Error(`Character not found: ${character.id}`)
+    equipped.push(equipRelicMove(currentCharacter, relic))
+  }
+
+  return {
+    characterId: character.id,
+    name: characterName(character.id),
+    equippedParts: equipped.map((entry) => ({ part: entry.part, relicId: entry.relicId })),
+    equipment: summarizeCharacterEquipment(getCharacterById(character.id) ?? character),
+    changes: equipped,
+  }
+}
+
+function getLightConePathWarning(character: Character, lightConeId: LightConeId) {
+  const characterPath = getGameMetadata().characters[character.id]?.path
+  const lightConePath = getGameMetadata().lightCones[lightConeId]?.path
+  if (characterPath && lightConePath && characterPath !== lightConePath) {
+    return `Light cone path ${lightConePath} does not match character path ${characterPath}.`
+  }
+  return undefined
+}
+
 export const HsrMcpBridge = {
   loadAccountContext(json: unknown) {
     const result = loadMcpAccountContext(json)
     activeContextId = result.contextId
+    dirtySinceExport = false
+    lastExportedAt = null
     optimizerDrafts.clear()
     return result
   },
@@ -725,6 +872,8 @@ export const HsrMcpBridge = {
       characterCount: characters.length,
       relicCount: relics.length,
       lightConeCount: new Set(characters.map((c) => c.form?.lightCone).filter(Boolean)).size,
+      dirtySinceExport,
+      lastExportedAt,
     }
   },
 
@@ -771,6 +920,58 @@ export const HsrMcpBridge = {
       equipped: Object.fromEntries(Object.entries(preview.displayRelics).map(([part, relic]) => [part, summarizeRelic(relic)])),
       relicScores: preview.scoringResults.relics.map(({ meta, ...score }) => score),
     }
+  },
+
+  getCharacterEquipment(input: Identifier) {
+    return summarizeCharacterEquipment(resolveCharacter(input))
+  },
+
+  equipLightCone(input: Identifier & {
+    lightConeId: LightConeId,
+    level?: number,
+    superimposition?: number,
+  }) {
+    const character = resolveCharacter(input)
+    const lightCone = getGameMetadata().lightCones[input.lightConeId]
+    if (!lightCone) throw new Error(`Light cone not found: ${input.lightConeId}`)
+
+    const before = summarizeCharacterEquipment(character)
+    const updated = {
+      ...character,
+      form: {
+        ...character.form,
+        lightCone: input.lightConeId,
+        lightConeLevel: input.level ?? character.form.lightConeLevel ?? 80,
+        lightConeSuperimposition: input.superimposition ?? character.form.lightConeSuperimposition ?? 1,
+      },
+    }
+    upsertCharacter(updated)
+    setMcpDirty()
+
+    return {
+      characterId: updated.id,
+      name: characterName(updated.id),
+      before,
+      after: summarizeCharacterEquipment(updated),
+      warnings: [getLightConePathWarning(updated, input.lightConeId)].filter(Boolean),
+    }
+  },
+
+  equipRelic(input: Identifier & { relicId: string }) {
+    const character = resolveCharacter(input)
+    const relic = getRelicById(input.relicId)
+    if (!relic) throw new Error(`Relic not found: ${input.relicId}`)
+    return equipRelicMove(character, relic)
+  },
+
+  equipRelicBuild(input: Identifier & { relicIds: Partial<Record<Parts, string | null | undefined>> }) {
+    const character = resolveCharacter(input)
+    return equipBuildMove(character, normalizeBuild(input.relicIds))
+  },
+
+  equipOptimizationResult(input: { characterId: CharacterId, relicIds: Partial<Record<Parts, string | null | undefined>> }) {
+    const character = resolveCharacter({ characterId: input.characterId })
+    return equipBuildMove(character, normalizeBuild(input.relicIds))
   },
 
   listRelicSets() {
@@ -1232,6 +1433,29 @@ export const HsrMcpBridge = {
     Optimizer.cancel()
     useOptimizerDisplayStore.getState().setOptimizationInProgress(false)
     return HsrMcpBridge.getOptimizationStatus()
+  },
+
+  serializeAccountContext() {
+    const stateString = JSON.stringify(serializeMcpAccountContext())
+    return {
+      contextId: activeContextId,
+      json: stateString,
+      characterCount: getCharacters().length,
+      relicCount: getRelics().length,
+      bytes: new Blob([stateString]).size,
+      dirtySinceExport,
+      exportedAt: new Date().toISOString(),
+    }
+  },
+
+  markAccountContextExported(input: { exportedAt?: string } = {}) {
+    dirtySinceExport = false
+    lastExportedAt = input.exportedAt ?? new Date().toISOString()
+    return {
+      contextId: activeContextId,
+      dirtySinceExport,
+      lastExportedAt,
+    }
   },
 }
 
