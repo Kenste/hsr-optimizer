@@ -4,6 +4,7 @@ import {
   Modal,
   TextInput,
 } from '@mantine/core'
+import { getCharacterConfig } from 'lib/conditionals/resolver/characterConfigRegistry'
 import type { PathName } from 'lib/constants/constants'
 import { Assets } from 'lib/rendering/assets'
 import { getGameMetadata } from 'lib/state/gameMetadata'
@@ -17,6 +18,7 @@ import {
   type LcOptions,
 } from 'lib/ui/selectors/optionGenerator'
 import { SelectCardGrid } from 'lib/ui/selectors/SelectCardGrid'
+import classes from 'lib/ui/selectors/SelectCardGrid.module.css'
 import {
   LC_CARD_IMAGE_HEIGHT,
   LC_CARD_IMAGE_WIDTH,
@@ -35,7 +37,6 @@ import {
 import { useTranslation } from 'react-i18next'
 import type { CharacterId } from 'types/character'
 import type { LightConeId } from 'types/lightCone'
-import classes from './SelectCardGrid.module.css'
 
 type LightConeFilters = {
   rarity: number[],
@@ -110,6 +111,11 @@ export function LightConeSelect({
         return x.label.toLowerCase().includes(filters.name)
       }),
     [lightConeOptions, filters],
+  )
+
+  const signatureId = useMemo<LightConeId | null>(
+    () => (characterId ? getCharacterConfig(characterId)?.defaultLightCone ?? null : null),
+    [characterId],
   )
 
   return (
@@ -190,6 +196,7 @@ export function LightConeSelect({
                 imageXOffset={LC_CARD_IMAGE_X_OFFSET}
                 imageYOffset={LC_CARD_IMAGE_Y_OFFSET}
                 textRows={2}
+                signatureId={signatureId ?? undefined}
               />
             </OverlayScrollbarsComponent>
           </div>

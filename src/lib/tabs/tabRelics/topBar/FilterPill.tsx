@@ -2,6 +2,7 @@ import {
   Badge,
   Button,
   Checkbox,
+  CloseButton,
   Combobox,
   Group,
   useCombobox,
@@ -81,7 +82,21 @@ function FilterPillInner<T extends string | number | boolean>({
           variant={activeCount > 0 ? 'light' : 'default'}
           size='xs'
           onClick={() => combobox.toggleDropdown()}
-          leftSection={<IconFilter size={12} />}
+          leftSection={activeCount > 0
+            ? (
+              // Rendered as a div — leftSection is inside the Button element, and a nested <button> is invalid HTML
+              <CloseButton
+                component='div'
+                size={16}
+                iconSize={16}
+                variant='transparent'
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onChange(selected.filter((v) => !optionValues.has(v)))
+                }}
+              />
+            )
+            : <IconFilter size={12} />}
           rightSection={activeCount > 0 ? <Badge size='xs' circle variant='filled'>{activeCount}</Badge> : undefined}
           style={{ flex, minWidth: 0, width: '100%' }}
         >

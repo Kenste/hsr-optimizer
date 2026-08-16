@@ -42,6 +42,7 @@ import {
   AbilityKind,
   DEFAULT_FUA,
   DEFAULT_SKILL,
+  DEFAULT_UNIQUE,
   END_BASIC,
   END_SKILL,
   NULL_TURN_ABILITY_NAME,
@@ -54,6 +55,8 @@ import {
   SPREAD_ORNAMENTS_2P_GENERAL_CONDITIONALS,
   SPREAD_RELICS_4P_GENERAL_CONDITIONALS,
 } from 'lib/scoring/scoringConstants'
+import { wrappedFixedT } from 'lib/utils/i18nUtils'
+import { precisionRound } from 'lib/utils/mathUtils'
 import { type Eidolon } from 'types/character'
 import { type CharacterConfig } from 'types/characterConfig'
 import { type CharacterConditionalsController } from 'types/conditionals'
@@ -71,11 +74,12 @@ export const GilgameshAbilities: AbilityKind[] = [
   AbilityKind.BASIC,
   AbilityKind.SKILL,
   AbilityKind.ULT,
-  AbilityKind.FUA,
+  AbilityKind.UNIQUE,
   AbilityKind.BREAK,
 ]
 
 const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsController => {
+  const t = wrappedFixedT(withContent).get(null, 'conditionals', 'Characters.Gilgamesh.Content')
   const betaContent = i18next.t('BetaMessage', { ns: 'conditionals', Version: CURRENT_DATA_VERSION })
   const { basic, skill, ult, talent } = AbilityEidolon.SKILL_BASIC_3_ULT_TALENT_5
   const {
@@ -102,7 +106,24 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
   const jointFuaScaling = talent(e, 4.00, 4.40)
   const talentUltDmgBuffValue = talent(e, 0.40, 0.44)
 
-  const fuaHitMulti = ashblazingMulti([aoe(jointFuaScaling)])
+  const ultHitMulti = ashblazingMulti([
+    aoe(ultScaling),
+    ...Array(10).fill(single(ultBounceScaling)),
+  ])
+
+  const uniqueHitMulti = ashblazingMulti([
+    ...Array(3).fill(aoe(0.2)),
+    aoe(0.4),
+  ])
+
+  function getHitMulti(action: OptimizerAction, context: OptimizerContext) {
+    switch (action.actionType) {
+      case AbilityKind.ULT:
+        return ultHitMulti(context)
+      default:
+        return uniqueHitMulti(context)
+    }
+  }
 
   const defaults = {
     herosHauteurStacks: 6,
@@ -124,49 +145,49 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
     herosHauteurStacks: {
       id: 'herosHauteurStacks',
       formItem: 'slider',
-      text: 'Hero\'s Hauteur CD stacks',
-      content: betaContent,
+      text: t('herosHauteurStacks.text'),
+      content: t('herosHauteurStacks.content'),
       min: 0,
       max: 6,
     },
     interestSpdStacks: {
       id: 'interestSpdStacks',
       formItem: 'slider',
-      text: 'Interest stacks',
-      content: betaContent,
+      text: t('interestSpdStacks.text'),
+      content: t('interestSpdStacks.content'),
       min: 0,
       max: 20,
     },
     kingsAcknowledgement: {
       id: 'kingsAcknowledgement',
       formItem: 'switch',
-      text: 'King\'s Acknowledgement',
-      content: betaContent,
+      text: t('kingsAcknowledgement.text'),
+      content: t('kingsAcknowledgement.content', { KingsAcknowledgementDefPen: precisionRound(100 * skillDefIgnoreValue) }),
     },
     kingsBurden: {
       id: 'kingsBurden',
       formItem: 'switch',
-      text: 'King\'s Burden',
-      content: betaContent,
+      text: t('kingsBurden.text'),
+      content: t('kingsBurden.content', { TalentUltDmgBoost: precisionRound(100 * talentUltDmgBuffValue) }),
     },
     a6TeamBuff: {
       id: 'a6TeamBuff',
       formItem: 'switch',
-      text: 'Hegemon\'s Strife',
-      content: betaContent,
+      text: t('a6TeamBuff.text'),
+      content: t('a6TeamBuff.content'),
     },
     e6ResPen: {
       id: 'e6ResPen',
       formItem: 'switch',
-      text: 'E6 RES PEN',
-      content: betaContent,
+      text: t('e6ResPen.text'),
+      content: t('e6ResPen.content'),
       disabled: e < 6,
     },
     goldenRuleStacks: {
       id: 'goldenRuleStacks',
       formItem: 'slider',
-      text: 'Golden Rule stacks',
-      content: betaContent,
+      text: t('goldenRuleStacks.text'),
+      content: t('goldenRuleStacks.content'),
       min: 0,
       max: 3,
     },
@@ -206,6 +227,8 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
       const ultTotalScaling = ultScaling + ultBounceTotalScaling * 10 / context.enemyCount
       const ultToughness = 40 + 2 * 10 / context.enemyCount
 
+      const saberInTeam = teammateMatchesId(context, Saber.id)
+
       return {
         [AbilityKind.BASIC]: {
           hits: [
@@ -235,14 +258,16 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
               .build(),
           ],
         },
-        [AbilityKind.FUA]: {
-          hits: [
-            HitDefinitionBuilder.standardFua()
-              .damageElement(ElementTag.Lightning)
-              .atkScaling(hasSaber ? jointFuaScaling : 0)
-              .toughnessDmg(hasSaber ? 20 : 0)
-              .build(),
-          ],
+        [AbilityKind.UNIQUE]: {
+          hits: saberInTeam
+            ? [
+              HitDefinitionBuilder.standardFua()
+                .damageElement(ElementTag.Lightning)
+                .atkScaling(hasSaber ? jointFuaScaling : 0)
+                .toughnessDmg(hasSaber ? 20 : 0)
+                .build(),
+            ]
+            : [],
         },
         [AbilityKind.BREAK]: {
           hits: [
@@ -291,9 +316,10 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
     },
 
     finalizeCalculations: (x: ComputedStatsContainer, action: OptimizerAction, context: OptimizerContext) => {
+      boostAshblazingAtkContainer(x, action, getHitMulti(action, context))
     },
     newGpuFinalizeCalculations: (action: OptimizerAction, context: OptimizerContext) => {
-      return ''
+      return gpuBoostAshblazingAtkContainer(getHitMulti(action, context), action)
     },
 
     dynamicConditionals: [],
@@ -301,6 +327,7 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
 }
 
 const simulation = (): SimulationMetadata => ({
+  leaderboardEnabled: true,
   parts: {
     [Parts.Body]: [
       Stats.CR,
@@ -329,13 +356,23 @@ const simulation = (): SimulationMetadata => ({
     NULL_TURN_ABILITY_NAME,
     START_ULT,
     END_SKILL,
-    DEFAULT_FUA,
+    DEFAULT_UNIQUE,
     WHOLE_SKILL,
     WHOLE_SKILL,
     // TODO: verify rotation length
   ],
   errRopeEidolon: 0,
   deprioritizeBuffs: true,
+  leaderboardTeams: [
+    {
+      deprioritizeBuffs: true,
+      teammates: [
+        { characterId: Saber.id, lightCones: [AThanklessCoronation.id] },
+        { characterId: MortenaxBlade.id, lightCones: [ReforgedInHellfire.id] },
+        { characterId: HuohuoB1.id, lightCones: [NightOfFright.id] },
+      ],
+    },
+  ],
   relicSets: [
     [Sets.ScholarLostInErudition, Sets.ScholarLostInErudition],
     ...SPREAD_RELICS_4P_GENERAL_CONDITIONALS,
@@ -403,6 +440,7 @@ const scoring = (): ScoringMetadata => ({
   presets: [
     PresetEffects.fnMortenaxAshblazingSet(8),
   ],
+  eidolonImage: 4,
   defaultDamageType: DamageTag.SKILL,
   sortOption: SortOption.SKILL,
   addedColumns: [
@@ -416,7 +454,7 @@ const scoring = (): ScoringMetadata => ({
 
 const display = {
   imageCenter: { x: 1102, y: 943, z: 1.11 },
-  showcaseColor: '#867fb3',
+  showcaseColor: '#afa4ed',
 }
 
 export function gilgameshActionExists(action: OptimizerAction) {

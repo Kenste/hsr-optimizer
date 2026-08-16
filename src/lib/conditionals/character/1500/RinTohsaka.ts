@@ -16,6 +16,7 @@ import {
   type Conditionals,
   type ContentDefinition,
   createEnum,
+  teammateMatchesId,
 } from 'lib/conditionals/conditionalUtils'
 import { HitDefinitionBuilder } from 'lib/conditionals/hitDefinitionBuilder'
 import { DanceDanceDance } from 'lib/conditionals/lightcone/4star/DanceDanceDance'
@@ -44,6 +45,7 @@ import {
   AbilityKind,
   DEFAULT_FUA,
   DEFAULT_SKILL,
+  DEFAULT_UNIQUE,
   END_FUA,
   END_SKILL,
   NULL_TURN_ABILITY_NAME,
@@ -54,8 +56,11 @@ import { SortOption } from 'lib/optimization/sortOptions'
 import { PresetEffects } from 'lib/scoring/presetEffects'
 import {
   SPREAD_ORNAMENTS_2P_GENERAL_CONDITIONALS,
+  SPREAD_ORNAMENTS_2P_SUPPORT,
   SPREAD_RELICS_4P_GENERAL_CONDITIONALS,
 } from 'lib/scoring/scoringConstants'
+import { wrappedFixedT } from 'lib/utils/i18nUtils'
+import { precisionRound } from 'lib/utils/mathUtils'
 import { type Eidolon } from 'types/character'
 import { type CharacterConfig } from 'types/characterConfig'
 import { type CharacterConditionalsController } from 'types/conditionals'
@@ -73,11 +78,12 @@ export const RinTohsakaAbilities: AbilityKind[] = [
   AbilityKind.BASIC,
   AbilityKind.SKILL,
   AbilityKind.ULT,
-  AbilityKind.FUA,
+  AbilityKind.UNIQUE,
   AbilityKind.BREAK,
 ]
 
 const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsController => {
+  const t = wrappedFixedT(withContent).get(null, 'conditionals', 'Characters.RinTohsaka.Content')
   const betaContent = i18next.t('BetaMessage', { ns: 'conditionals', Version: CURRENT_DATA_VERSION })
   const { basic, skill, talent, ult } = AbilityEidolon.SKILL_BASIC_3_ULT_TALENT_5
   const {
@@ -104,7 +110,18 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
   const fuaScaling = talent(e, 3.00, 3.30)
   const talentCdBuffValue = talent(e, 0.70, 0.77)
 
-  const fuaHitMulti = ashblazingMulti([aoe(fuaScaling)])
+  const ultHitMulti = ashblazingMulti([aoe(1)])
+
+  const uniqueHitMulti = ashblazingMulti(Array(5).fill(aoe(0.20)))
+
+  function getHitMulti(action: OptimizerAction, context: OptimizerContext) {
+    switch (action.actionType) {
+      case AbilityKind.ULT:
+        return ultHitMulti(context)
+      default:
+        return uniqueHitMulti(context)
+    }
+  }
 
   const defaults = {
     enhancedSkill: true,
@@ -130,68 +147,68 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
     enhancedSkill: {
       id: 'enhancedSkill',
       formItem: 'switch',
-      text: 'Enhanced Skill',
-      content: betaContent,
+      text: t('enhancedSkill.text'),
+      content: t('enhancedSkill.content'),
     },
     skillBounces: {
       id: 'skillBounces',
       formItem: 'slider',
-      text: 'Skill bounces',
-      content: betaContent,
+      text: t('skillBounces.text'),
+      content: t('skillBounces.content'),
       min: 0,
       max: maxBounces,
     },
     enhancedSkillSpConsumed: {
       id: 'enhancedSkillSpConsumed',
       formItem: 'slider',
-      text: 'Enhanced Skill SP consumed',
-      content: betaContent,
+      text: t('enhancedSkillSpConsumed.text'),
+      content: t('enhancedSkillSpConsumed.content'),
       min: 0,
       max: maxSpConsumed,
     },
     talentCdBuff: {
       id: 'talentCdBuff',
       formItem: 'switch',
-      text: 'Talent CD buff',
-      content: betaContent,
+      text: t('talentCdBuff.text'),
+      content: t('talentCdBuff.content', { TalentCdBuff: precisionRound(100 * talentCdBuffValue) }),
     },
     elegantConduct: {
       id: 'elegantConduct',
       formItem: 'switch',
-      text: 'Elegant Conduct',
-      content: betaContent,
+      text: t('elegantConduct.text'),
+      content: t('elegantConduct.content'),
     },
     ladylikePoise: {
       id: 'ladylikePoise',
       formItem: 'switch',
-      text: 'SPD buff',
-      content: betaContent,
+      text: t('ladylikePoise.text'),
+      content: t('ladylikePoise.content'),
     },
     ultDmgTakenDebuff: {
       id: 'ultDmgTakenDebuff',
       formItem: 'switch',
-      text: 'Ult Vulnerability',
-      content: betaContent,
+      text: t('ultDmgTakenDebuff.text'),
+      content: t('ultDmgTakenDebuff.content', { UltVulnerability: precisionRound(100 * ultVulnerabilityValue) }),
     },
     e2Buffs: {
       id: 'e2Buffs',
       formItem: 'switch',
-      text: 'E2 Skill DMG buffs',
-      content: betaContent,
+      text: t('e2Buffs.text'),
+      content: t('e2Buffs.content'),
       disabled: e < 2,
     },
     e4TalentCdStacks: {
       id: 'e4TalentCdStacks',
       formItem: 'switch',
-      text: 'E4 CD stacks',
-      content: betaContent,
+      text: t('e4TalentCdStacks.text'),
+      content: t('e4TalentCdStacks.content'),
       disabled: e < 4,
     },
     e6ResPen: {
       id: 'e6ResPen',
       formItem: 'switch',
-      text: 'E6 RES PEN',
-      content: betaContent,
+      text: t('e6ResPen.text'),
+      content: t('e6ResPen.content'),
       disabled: e < 6,
     },
   }
@@ -230,6 +247,8 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
         ? 20 + 2 * r.skillBounces / context.enemyCount
         : 20
 
+      const archerInTeam = teammateMatchesId(context, Archer.id)
+
       return {
         [AbilityKind.BASIC]: {
           hits: [
@@ -259,14 +278,16 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
               .build(),
           ],
         },
-        [AbilityKind.FUA]: {
-          hits: [
-            HitDefinitionBuilder.standardFua()
-              .damageElement(ElementTag.Quantum)
-              .atkScaling(fuaScaling)
-              .toughnessDmg(20)
-              .build(),
-          ],
+        [AbilityKind.UNIQUE]: {
+          hits: archerInTeam
+            ? [
+              HitDefinitionBuilder.standardFua()
+                .damageElement(ElementTag.Quantum)
+                .atkScaling(fuaScaling)
+                .toughnessDmg(20)
+                .build(),
+            ]
+            : [],
         },
         [AbilityKind.BREAK]: {
           hits: [
@@ -321,15 +342,16 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
     },
 
     finalizeCalculations: (x: ComputedStatsContainer, action: OptimizerAction, context: OptimizerContext) => {
-      boostAshblazingAtkContainer(x, action, fuaHitMulti(context))
+      boostAshblazingAtkContainer(x, action, getHitMulti(action, context))
     },
     newGpuFinalizeCalculations: (action: OptimizerAction, context: OptimizerContext) => {
-      return gpuBoostAshblazingAtkContainer(fuaHitMulti(context), action)
+      return gpuBoostAshblazingAtkContainer(getHitMulti(action, context), action)
     },
   }
 }
 
 const simulation = (): SimulationMetadata => ({
+  leaderboardEnabled: true,
   parts: {
     [Parts.Body]: [
       Stats.CR,
@@ -358,12 +380,22 @@ const simulation = (): SimulationMetadata => ({
     NULL_TURN_ABILITY_NAME,
     START_ULT,
     DEFAULT_SKILL,
-    END_FUA,
+    DEFAULT_UNIQUE,
     START_SKILL,
-    END_FUA,
+    DEFAULT_UNIQUE,
   ],
   errRopeEidolon: 0,
   deprioritizeBuffs: true,
+  leaderboardTeams: [
+    {
+      deprioritizeBuffs: true,
+      teammates: [
+        { characterId: Archer.id, lightCones: [TheHellWhereIdealsBurn.id] },
+        { characterId: SparkleB1.id, lightCones: [EarthlyEscapade.id, DanceDanceDance.id] },
+        { characterId: HuohuoB1.id, lightCones: [NightOfFright.id] },
+      ],
+    },
+  ],
   relicSets: [
     [Sets.GeniusOfBrilliantStars, Sets.GeniusOfBrilliantStars],
     ...SPREAD_RELICS_4P_GENERAL_CONDITIONALS,
@@ -371,6 +403,7 @@ const simulation = (): SimulationMetadata => ({
   ornamentSets: [
     Sets.TengokuLivestream,
     ...SPREAD_ORNAMENTS_2P_GENERAL_CONDITIONALS,
+    ...SPREAD_ORNAMENTS_2P_SUPPORT,
   ],
   teammates: [
     {
@@ -431,6 +464,7 @@ const scoring = (): ScoringMetadata => ({
   presets: [
     PresetEffects.TENGOKU_SET,
   ],
+  eidolonImage: 3,
   defaultDamageType: DamageTag.SKILL,
   sortOption: SortOption.SKILL,
   hiddenColumns: [
@@ -442,7 +476,7 @@ const scoring = (): ScoringMetadata => ({
 const display = {
   imageCenter: { x: 1031, y: 1016, z: 1.02 },
   spineCenter: { x: 1081, y: 1019, z: 1.01 },
-  showcaseColor: '#bd81e1',
+  showcaseColor: '#e6c6ff',
 }
 
 export const RinTohsaka: CharacterConfig = {

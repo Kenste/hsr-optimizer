@@ -19,11 +19,13 @@
     "preview": "vite preview",
     "build": "vite build",
     "lint": "oxlint",
+    "format": "node src/scripts/convert-relative-imports.ts && dprint fmt",
+    "vitest": "vitest --no-watch --pool=threads",
+    "vitest:fast": "vitest --no-watch --pool=threads --exclude '**/simulations/tests/**/*Orchestrator*'",
+    "vitest:silent": "vitest --no-watch --pool=threads --silent",
+    "vitest:watch": "vitest --watch",
+    "leaderboard": "vite build --config vite.leaderboard.config.ts --configLoader native && node --max-old-space-size=8192 .leaderboard-build/runLeaderboard.js",
     "mcp": "node mcp/server.mjs",
-    "vitest": "vitest --dir src/lib --no-watch --pool=threads",
-    "vitest:fast": "vitest --dir src/lib --no-watch --pool=threads --exclude '**/simulations/tests/**/*Orchestrator*'",
-    "vitest:silent": "vitest --dir src/lib --no-watch --pool=threads --silent",
-    "vitest:watch": "vitest --dir src/lib --watch",
     "test": "npx playwright test --config tests/playwright.config.ts",
     "test:generate": "npx playwright codegen localhost:3000/hsr-optimizer",
     "test:ui": "npm run test -- --ui",
@@ -40,12 +42,12 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@esotericsoftware/spine-webgl": "4.1.23",
-    "@mantine/core": "^9.0.2",
-    "@mantine/dropzone": "^9.0.2",
-    "@mantine/form": "^9.0.2",
-    "@mantine/hooks": "^9.0.2",
-    "@mantine/modals": "^9.0.2",
-    "@mantine/notifications": "^9.0.2",
+    "@mantine/core": "^9.3.0",
+    "@mantine/dropzone": "^9.3.0",
+    "@mantine/form": "^9.3.0",
+    "@mantine/hooks": "^9.3.0",
+    "@mantine/modals": "^9.3.0",
+    "@mantine/notifications": "^9.3.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@tabler/icons-react": "^3.41.1",
     "@zumer/snapdom": "^2.8.0",
@@ -99,5 +101,9 @@
       "framework-utils": "1.1.0"
     },
     "@esotericsoftware/spine-core": "4.1.23"
+  },
+  "allowScripts": {
+    "@swc/core@1.15.33": true,
+    "dprint@0.54.0": true
   }
 }

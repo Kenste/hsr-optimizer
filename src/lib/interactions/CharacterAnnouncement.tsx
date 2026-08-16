@@ -1,18 +1,15 @@
 import { Alert } from '@mantine/core'
 import { CharacterAnnouncementMessages } from 'lib/constants/constants'
-import { getGameMetadata } from 'lib/state/gameMetadata'
+import { isPreNovaflare } from 'lib/state/gameMetadata'
 import type { CharacterId } from 'types/character'
 
-const PRE_NOVAFLARE_MESSAGE = 'Damage calculations for Pre-Novaflare characters and teammates are no longer supported. Please switch to their Novaflare versions.'
+const PRE_NOVAFLARE_MESSAGE =
+  'Damage calculations for Pre-Novaflare characters and teammates are no longer supported. Please switch to their Novaflare versions.'
 
-function isPreNovaflare(id: CharacterId): boolean {
-  const b1 = getGameMetadata().characters[`${id}b1` as CharacterId]
-  return !!b1 && !b1.unreleased
-}
-
-export function CharacterAnnouncement({ characterId, teammateCharacterIds }: {
+export function CharacterAnnouncement({ characterId, teammateCharacterIds, mt }: {
   characterId?: CharacterId | null,
   teammateCharacterIds?: CharacterId[],
+  mt?: number,
 }) {
   if (!characterId) return null
 
@@ -37,7 +34,7 @@ export function CharacterAnnouncement({ characterId, teammateCharacterIds }: {
   }
 
   return uniqueMessages.map((message, i) => (
-    <Alert color={message === PRE_NOVAFLARE_MESSAGE ? 'orange' : 'blue'} mt={10} key={i}>
+    <Alert color={message === PRE_NOVAFLARE_MESSAGE ? 'orange' : 'blue'} mt={mt} key={i}>
       {message}
     </Alert>
   ))

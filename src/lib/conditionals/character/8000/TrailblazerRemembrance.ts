@@ -450,6 +450,7 @@ ${p_containerActionVal(memoEntityIndex, StatKey.CD, config)} += finalBuffCd;
 }
 
 const supportSimulation = (): SimulationMetadata => ({
+  leaderboardEnabled: false,
   parts: {
     [Parts.Body]: [Stats.CD],
     [Parts.Feet]: [Stats.SPD],
@@ -469,7 +470,7 @@ const supportSimulation = (): SimulationMetadata => ({
     NULL_TURN_ABILITY_NAME,
   ],
   relicSets: [
-    [Sets.SacerdosRelivedOrdeal, Sets.SacerdosRelivedOrdeal],
+    [Sets.WorldRemakingDeliverer, Sets.WorldRemakingDeliverer],
     ...SPREAD_RELICS_4P_SUPPORT,
   ],
   ornamentSets: [
@@ -537,6 +538,7 @@ const scoring = (): ScoringMetadata => ({
   hiddenColumns: [SortOption.SKILL, SortOption.FUA, SortOption.DOT],
   addedColumns: [SortOption.MEMO_SKILL],
   supportSimulation: supportSimulation(),
+  eidolonImage: 4,
 })
 
 const displayCaelus = {
@@ -545,7 +547,7 @@ const displayCaelus = {
     y: 975,
     z: 0.95,
   },
-  showcaseColor: '#e6a8d4',
+  showcaseColor: '#cfaeeb',
 }
 
 const displayStelle = {
@@ -554,7 +556,7 @@ const displayStelle = {
     y: 975,
     z: 0.95,
   },
-  showcaseColor: '#e6a8d4',
+  showcaseColor: '#cfaeeb',
 }
 
 export const TrailblazerRemembranceCaelus: CharacterConfig = {

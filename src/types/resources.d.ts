@@ -1,4 +1,4 @@
-interface Resources {
+export default interface Resources {
   "benchmarksTab": {
     "LeftPanel": {
       "Header": "Benchmark"
@@ -52,6 +52,70 @@ interface Resources {
     },
     "Title": "Benchmark Generator"
   },
+  "calculatorsTab": {
+    "AHA": {
+      "Calculator": {
+        "Constant": "Constant",
+        "Formula": {
+          "Aha": "Aha Speed",
+          "TeammateSymbol": "T"
+        },
+        "Header": {
+          "AhaSpeed": "Aha\nSpeed",
+          "CombatSpeed": "Combat\nSpeed",
+          "ElationTeammate": "Elation\nTeammate"
+        },
+        "TeammateN": "Teammate {{position}}",
+        "Title": "Aha Speed Calculator"
+      },
+      "Label": "Aha Speed",
+      "Solver": {
+        "Input": {
+          "DesiredAha": "Target Aha SPD"
+        },
+        "Output": {
+          "AllFilled": "No slots open",
+          "AlreadyMet": "SPD target already reached",
+          "Teammate0": "1st Teammate's SPD",
+          "Teammate1": "2nd Teammate's SPD",
+          "Teammate2": "3rd Teammate's SPD",
+          "Teammate3": "4th Teammate's SPD"
+        },
+        "Title": "Target Speed Solver"
+      }
+    },
+    "EHR": {
+      "Calculator": {
+        "EHRLabel": "± {{value}}% $t(common:ShortStats.Effect Hit Rate)",
+        "EquationLabel": {
+          "BaseChance": "Base chance",
+          "DebuffRes": "Debuff RES multi",
+          "EffectRes": "Eff RES multi",
+          "HitRate": "EHR multi"
+        },
+        "Input": {
+          "Attempts": "Application attempts",
+          "BaseChance": "Debuff base chance",
+          "DebuffRes": "Enemy debuff RES",
+          "EffectRes": "Enemy effect RES",
+          "HitRate": "Effect Hit Rate",
+          "Range": "Grid range"
+        },
+        "Output": {
+          "Change": "chance",
+          "OverAttempts": "Over {{count}} attempts",
+          "PerAttempt": "Per attempt"
+        },
+        "Title": "Debuff Application Calculator"
+      },
+      "Label": "Effect Hit Rate",
+      "Solver": {
+        "Input": "Target debuff chance",
+        "Output": "Required EHR",
+        "Title": "Target EHR Solver"
+      }
+    }
+  },
   "charactersTab": {
     "CharacterMenu": {
       "Build": {
@@ -89,10 +153,12 @@ interface Resources {
     "CharacterPreview": {
       "AlgorithmSlider": {
         "Labels": {
-          "CombatScore": "Combat Score",
-          "CombatScoreTBD": "Combat (TBD)",
           "NoneScore": "None",
-          "StatScore": "Substat Rolls"
+          "StatScore": "Substat Rolls",
+          "buffer": "Support Benchmark",
+          "dps": "DPS Benchmark",
+          "heal": "Heal Benchmark",
+          "shield": "Shield Benchmark"
         }
       },
       "ArtBy": "Art by {{artistName}}",
@@ -145,6 +211,12 @@ interface Resources {
         "SimulationTeammates": "Simulation teammates"
       },
       "CharacterScore": "Character Score: {{score}} {{grade}}",
+      "ComboLabel": {
+        "buffer": "{{stat}} Buff",
+        "dps": "Combo DMG",
+        "heal": "Combo Heal",
+        "shield": "Combo Shield"
+      },
       "CustomizationSidebar": {
         "Label": "Customization",
         "Modes": {
@@ -160,7 +232,10 @@ interface Resources {
       "DetailsSlider": {
         "Labels": {
           "CombatStats": "Combat Stats",
-          "SubDpsCombatStats": "Combat Stats (Sub DPS)"
+          "CombatStatsHeal": "Combat Stats (Heal)",
+          "CombatStatsShield": "Combat Stats (Shield)",
+          "CombatStatsSubDps": "Combat Stats (Sub DPS)",
+          "CombatStatsSupport": "Combat Stats (Support)"
         }
       },
       "EST-TBP": {
@@ -184,10 +259,18 @@ interface Resources {
         "RevertedPortrait": "Successfully reverted portrait",
         "SavedPortrait": "Successfully saved portrait"
       },
+      "RulerLabel": {
+        "buffer": "{{stat}} BUFF",
+        "dps": "DMG",
+        "heal": "HEAL",
+        "shield": "SHIELD"
+      },
       "ScoreHeader": {
-        "Score": "DPS Score {{score}}% {{grade}}",
-        "Title": "Combat Sim",
-        "TitleBenchmark": "{{spd}} SPD Benchmark"
+        "CustomSpeed": "{{spd}} SPD Benchmark",
+        "buffer": "Support Benchmark",
+        "dps": "DPS Benchmark",
+        "heal": "Heal Benchmark",
+        "shield": "Shield Benchmark"
       },
       "ScoringColumn": {
         "Baseline": {
@@ -230,6 +313,12 @@ interface Resources {
       },
       "ScoringDetails": {
         "Header": "How is DPS Score calculated?"
+      },
+      "ScoringExplanation": {
+        "buffer": "Support Benchmark Calculations",
+        "dps": "DPS Benchmark Calculations",
+        "heal": "Heal Benchmark Calculations",
+        "shield": "Shield Benchmark Calculations"
       },
       "ScoringSidebar": {
         "BenchmarkSpd": {
@@ -339,6 +428,7 @@ interface Resources {
       "Wind": "$t(gameData:Elements.Wind)"
     },
     "LevelShort": "Lv{{level}}",
+    "Loading": "Loading",
     "MemospriteLabel": "{{label}}ᴹ",
     "No": "No",
     "Ok": "Ok",
@@ -779,34 +869,6 @@ interface Resources {
           }
         }
       },
-      "BlackSwan": {
-        "Content": {
-          "arcanaStacks": {
-            "content": "While afflicted with Arcana, enemy targets receive Wind DoT equal to {{dotScaling}}% of Black Swan's ATK at the start of each turn. Each stack of Arcana increases this DoT DMG multiplier by {{arcanaStackMultiplier}}%. Arcana can stack up to 50 times.::BR::When there are 3 or more Arcana stacks, deals Wind DoT to adjacent targets. When there are 7 or more Arcana stacks, enables the current DoT dealt this time to ignore 20% of the target's and adjacent targets' DEF.",
-            "text": "Arcana stacks"
-          },
-          "defDecreaseDebuff": {
-            "content": "Enemies DEF is decreased by {{defShredValue}}%.",
-            "text": "DEF shred debuff"
-          },
-          "e1ResReduction": {
-            "content": "While Black Swan is active in battle, enemies afflicted with Wind Shear, Bleed, Burn, or Shock will have their corresponding Wind, Physical, Fire, or Lightning RES respectively reduced by 25%.",
-            "text": "E1 RES shred"
-          },
-          "e4EffResPen": {
-            "content": "While in the Epiphany state, enemy targets have their Effect RES reduced by 10%.",
-            "text": "E4 Effect RES shred"
-          },
-          "ehrToDmgBoost": {
-            "content": "Increases this unit's DMG by an amount equal to 60% of Effect Hit Rate, up to a maximum DMG increase of 72%.",
-            "text": "EHR to DMG boost"
-          },
-          "epiphanyDebuff": {
-            "content": "Enemies affected by Epiphany take {{epiphanyDmgTakenBoost}}% more DMG in their turn.",
-            "text": "Epiphany debuff"
-          }
-        }
-      },
       "BlackSwanB1": {
         "Content": {
           "arcanaStacks": {
@@ -838,22 +900,6 @@ interface Resources {
           "combatEhr": {
             "content": "Increases the DMG dealt by all allies by an amount equal to 60% of Black Swan's Effect Hit Rate, up to a maximum DMG increase of 72%.",
             "text": "Black Swan's combat EHR"
-          }
-        }
-      },
-      "Blade": {
-        "Content": {
-          "e4MaxHpIncreaseStacks": {
-            "content": "Increases HP by 20%, stacks up to 2 times.",
-            "text": "E4 max HP stacks"
-          },
-          "enhancedStateActive": {
-            "content": "Increases DMG by {{enhancedStateDmgBoost}}% and his Basic ATK Shard Sword is enhanced to Forest of Swords for 3 turns.::BR::E2: Increases CRIT Rate by 15%.",
-            "text": "Hellscape state"
-          },
-          "hpPercentLostTotal": {
-            "content": "Ultimate DMG scales off of the tally of Blade's HP loss in the current battle. The tally of Blade's HP loss in the current battle is capped at {{hpPercentLostTotalMax}}% of his Max HP.",
-            "text": "HP% lost total"
           }
         }
       },
@@ -1321,42 +1367,6 @@ interface Resources {
           }
         }
       },
-      "Firefly": {
-        "Content": {
-          "atkToBeConversion": {
-            "content": "For every 10 points of SAM's ATK that exceeds 1800, increases this unit's Break Effect by 0.8%.",
-            "text": "ATK to BE buff"
-          },
-          "e1DefShred": {
-            "content": "When using the Enhanced Skill, ignores 15% of the target's DEF. The Enhanced Skill does not consume Skill Points.",
-            "text": "E1 DEF PEN"
-          },
-          "e4ResBuff": {
-            "content": "While in Complete Combustion, increases SAM's Effect RES by 50%.",
-            "text": "E4 RES buff"
-          },
-          "e6Buffs": {
-            "content": "While in Complete Combustion, increases SAM's Fire RES PEN by 20%. When using the Enhanced Basic ATK or Enhanced Skill, increases the Weakness Break efficiency by 50%.",
-            "text": "E6 buffs"
-          },
-          "enhancedStateActive": {
-            "content": "Enters the Complete Combustion state, advances this unit's Action by 100%, and gains Enhanced Basic ATK and Enhanced Skill.",
-            "text": "Enhanced state"
-          },
-          "enhancedStateSpdBuff": {
-            "content": "While in Complete Combustion, increases SPD by {{ultSpdBuff}}.",
-            "text": "Enhanced SPD buff"
-          },
-          "superBreakDmg": {
-            "content": "When SAM is in Complete Combustion with a Break Effect that is equal to or greater than 200%/360%, attacking a Weakness-Broken enemy target will convert the Toughness Reduction of this attack into 1 instance of 35%/50% Super Break DMG.",
-            "text": "Super Break enabled (force weakness break)"
-          },
-          "talentDmgReductionBuff": {
-            "content": "The lower the HP, the less DMG received. When HP is 20% or lower, the DMG Reduction reaches its maximum effect, reducing up to {{talentDmgReductionBuff}}%. During the Complete Combustion, the DMG Reduction remains at its maximum effect, and the Effect RES increases by {{talentResBuff}}%.",
-            "text": "Max EHP buff"
-          }
-        }
-      },
       "FireflyB1": {
         "Content": {
           "atkToBeConversion": {
@@ -1489,6 +1499,38 @@ interface Resources {
           }
         }
       },
+      "Gilgamesh": {
+        "Content": {
+          "a6TeamBuff": {
+            "content": "While Gilgamesh is on the field, increases the ATK of all ally targets by 20% and CRIT DMG by 20%. If the target's Max Energy exceeds 140, every 1 excess point of Max Energy additionally increases ATK and CRIT DMG by 1%, up to a maximum of 100%.",
+            "text": "Hegemon's Strife"
+          },
+          "e6ResPen": {
+            "content": "While Gilgamesh is on the field, increases the All-Type RES PEN of ally characters by 20%.",
+            "text": "E6 RES PEN"
+          },
+          "goldenRuleStacks": {
+            "content": "When a teammate uses their Ultimate, Gilgamesh gains 1 point of \"Golden Rule,\" up to a total of 3 points. When this unit uses his Ultimate, he consumes all \"Golden Rule\" points and increases his Ultimate DMG's CRIT DMG by 100% for each point of \"Golden Rule\" consumed.",
+            "text": "Golden Rule stacks"
+          },
+          "herosHauteurStacks": {
+            "content": "During the battle, every 1 point of \"Interest\" gained by Gilgamesh increases his CRIT DMG by 25%. This effect can stack up to 6 times.",
+            "text": "Hero's Hauteur CD stacks"
+          },
+          "interestSpdStacks": {
+            "content": "When another ally target takes action, Gilgamesh gains 1 point of \"Interest\". For each point of \"Interest\" in possession, SPD increases by 10%.",
+            "text": "Interest stacks"
+          },
+          "kingsAcknowledgement": {
+            "content": "When using skill, obtains \"King's Acknowledgement,\" allowing this unit to ignore {{KingsAcknowledgementDefPen}}% of the target's DEF when dealing DMG, lasting for 3 turns. ::BR:: E1: When Gilgamesh possesses \"King's Acknowledgement,\" its DEF-ignoring effect will apply to other teammates as well, and \"King's Acknowledgement\" will additionally increase Gilgamesh's ATK by 60%.",
+            "text": "King's Acknowledgement"
+          },
+          "kingsBurden": {
+            "content": "When an ally uses their Ultimate, Gilgamesh gains \"King's Burden,\" which increases Ultimate DMG dealt by this unit by {{TalentUltDmgBoost}}%, lasting for 3 turns.",
+            "text": "King's Burden"
+          }
+        }
+      },
       "Guinaifen": {
         "Content": {
           "e1EffectResShred": {
@@ -1595,6 +1637,38 @@ interface Resources {
           }
         }
       },
+      "HimekoNova": {
+        "Content": {
+          "assistSkillBuff": {
+            "content": "Using the Assist Skill is considered as Himeko • Nova using her Skill. Himeko • Nova's All-Type RES PEN increases by {{AssistSkillResPen}}% and CRIT DMG increases by {{AssistSkillCdBuff}}%.",
+            "text": "Assist Skill buff"
+          },
+          "companionDecimation": {
+            "content": "Increases all allies' CRIT DMG by {{DecimationCdBuff}}%, and additionally increases the CRIT DMG dealt by Skills by {{DecimationSkillCdBuff}}%.",
+            "text": "Companion Protocol: Decimation"
+          },
+          "companionVerdict": {
+            "content": "Increases DMG dealt by Himeko • Nova by {{VerdictDmgBuff}}%, and additionally increases her Ultimate DMG dealt by {{VerdictUltDmgBuff}}%.",
+            "text": "Companion Protocol: Verdict"
+          },
+          "e4ResPen": {
+            "content": "When using the Assist Skill from Talent \"Of Fire and Far Faring,\" the All-Type RES PEN increase effect applies to all allies. When Himeko • Nova gains this effect, her All-Type RES PEN increases by an additional 10%.",
+            "text": "E4 team RES PEN"
+          },
+          "e6": {
+            "content": "Himeko • Nova's Fire Type RES PEN increases by 20%. Max \"Source Energy\" increases to 6 points, and when an ally uses or triggers an Assist Skill, DMG dealt by the Assist Skill increases by 75%, and Himeko • Nova gains 1 point of \"Source Energy\". When launching a \"Hyperluminal Particle Beam\" attack during Ultimate, additionally gains 1 point of \"Source Energy\". When launching \"Orbital Annihilation Pulse,\" if the current \"Source Energy\" is 6 points or more, additionally deals Fire DMG equal to 160% of Himeko • Nova's ATK to all enemies 1 time.",
+            "text": "E6 buffs"
+          },
+          "navigatorsSemaphore": {
+            "content": "When Himeko • Nova has \"Navigator's Semaphore,\" DMG dealt by all allies increases by {{SemaphoreDmgBoost}}%.",
+            "text": "Navigator's Semaphore"
+          },
+          "selfUseAssistSkill": {
+            "content": "When Himeko uses her assist skill, deals increased damage to all enemies and deals 1 additional instance of damage to a random enemy target.",
+            "text": "Self use Assist Skill"
+          }
+        }
+      },
       "Hook": {
         "Content": {
           "enhancedSkill": {
@@ -1604,22 +1678,6 @@ interface Resources {
           "targetBurned": {
             "content": "When attacking a target afflicted with Burn, deals Additional Fire DMG equal to {{targetBurnedExtraScaling}}% of Hook's ATK.::BR::E6: Hook deals 20% more DMG to enemies afflicted with Burn.",
             "text": "Target burned"
-          }
-        }
-      },
-      "Huohuo": {
-        "Content": {
-          "e6DmgBuff": {
-            "content": "When healing a target ally, increases the target ally's DMG dealt by 50% for 2 turns.",
-            "text": "E6 DMG buff"
-          },
-          "skillBuff": {
-            "content": "When Huohuo possesses Divine Provision, all allies' SPD increases by 12%.",
-            "text": "E1 SPD buff"
-          },
-          "ultBuff": {
-            "content": "Increases all allies' ATK by {{ultBuffValue}}% for 2 turns after using Ultimate.",
-            "text": "Ult ATK buff"
           }
         }
       },
@@ -1835,26 +1893,6 @@ interface Resources {
           }
         }
       },
-      "Jingliu": {
-        "Content": {
-          "e1CdBuff": {
-            "content": "When using her Ultimate or Enhanced Skill, Jingliu's CRIT DMG increases by 24% for 1 turn. If only one enemy target is attacked, the target will additionally be dealt Ice DMG equal to 100% of Jingliu's ATK.",
-            "text": "E1 Ult active"
-          },
-          "e2SkillDmgBuff": {
-            "content": "After using Ultimate, increases the DMG of the next Enhanced Skill by 80%.",
-            "text": "E2 Skill buff"
-          },
-          "talentEnhancedState": {
-            "content": "When Jingliu has 2 stacks of Syzygy, she enters the Spectral Transmigration state with her Action Advanced by 100% and her CRIT Rate increases by {{talentCrBuff}}%. Then, Jingliu's Skill Transcendent Flash becomes enhanced and turns into Moon On Glacial River, and becomes the only ability she can use in battle.",
-            "text": "Enhanced state"
-          },
-          "talentHpDrainAtkBuff": {
-            "content": "When Jingliu uses an attack in the Spectral Transmigration state, she consumes HP from all other allies and Jingliu's ATK increases based on the total HP consumed from all allies in this attack, capped at {{talentHpDrainAtkBuffMax}}% of her base ATK, lasting until the current attack ends.",
-            "text": "HP drain ATK buff"
-          }
-        }
-      },
       "JingliuB1": {
         "Content": {
           "e1Buffs": {
@@ -1884,18 +1922,6 @@ interface Resources {
           "talentEnhancedState": {
             "content": "When Jingliu has 2 stacks of \"Syzygy,\" she enters the \"Spectral Transmigration\" state and her CRIT Rate increases by {{UltCRBuff}}%. ::BR:: While in the \"Spectral Transmigration\" state, Effect RES increases by 35%, and Ultimate DMG dealt increases by 20%.",
             "text": "Enhanced state"
-          }
-        }
-      },
-      "Kafka": {
-        "Content": {
-          "e1DotDmgReceivedDebuff": {
-            "content": "When the Talent triggers a follow-up attack, there is a 100% base chance to increase the DoT received by the target by 30% for 2 turns.",
-            "text": "E1 DoT vulnerability"
-          },
-          "e2TeamDotBoost": {
-            "content": "While Kafka is on the field, DoT dealt by all allies increases by 25%.",
-            "text": "E2 Team DoT DMG boost"
           }
         }
       },
@@ -2048,6 +2074,34 @@ interface Resources {
           "ultHitsOnTarget": {
             "content": "Number of Ultimate hits on the primary target, dealing DMG equal to {{ultStackScaling}}% ATK per hit.",
             "text": "Ult hits on target"
+          }
+        }
+      },
+      "MortenaxBlade": {
+        "Content": {
+          "e1ResPen": {
+            "content": "While the Zone is active, decreases all enemies' All-Type RES by 20%.",
+            "text": "E1 RES PEN"
+          },
+          "e2FuaDmgBoost": {
+            "content": "When an ally character uses Ultimate to deal DMG, it is considered as having launched Follow-Up ATK. The Follow-Up ATK DMG dealt by ally targets increases by 75%.",
+            "text": "E2 buffs"
+          },
+          "e4DmgBoost": {
+            "content": "Ult zone additionally increases ally targets' DMG dealt by 50%.",
+            "text": "E4 DMG boost"
+          },
+          "e6EnhancedUlt": {
+            "content": "The DMG multiplier of \"Tenax Per Ignem\" increases to 150% of its original value.",
+            "text": "E6 Ult Final DMG"
+          },
+          "infiniteFuryActive": {
+            "content": "During the \"Infinite Fury\" state, increases CRIT Rate by 20%, increases CRIT DMG by {{cdBuff}}%, enhances Basic ATK, unlocks Skill, and gains a new Ultimate \"Tenax Per Ignem.\"",
+            "text": "Infinite Fury state"
+          },
+          "ultZone": {
+            "content": "While the Zone is active, decreases DMG taken by this unit by 50%. While the Zone is active, ally targets deal 50% increased DMG. If there are other Nihility characters aside from Mortenax Blade in the team, Ultimate DMG dealt by ally targets increases by 75%. Otherwise, DMG dealt by Mortenax Blade additionally increases by 75%. ::BR:: E1: While the Zone is active, decreases all enemies' All-Type RES by 20%. ::BR:: E4: Additionally increases ally targets' DMG dealt by 50%.",
+            "text": "Zone active"
           }
         }
       },
@@ -2263,6 +2317,50 @@ interface Resources {
           }
         }
       },
+      "RinTohsaka": {
+        "Content": {
+          "e2Buffs": {
+            "content": "Increases Rin Tohsaka's Skill DMG by 30%. While Rin Tohsaka is on the field, Skill DMG dealt by all allies becomes 130% of the original DMG.",
+            "text": "E2 Skill DMG buffs"
+          },
+          "e4TalentCdStacks": {
+            "content": "When the CRIT DMG boost effect from Talent \"Gem Magecraft\" takes effect on Rin Tohsaka, the effect can stack up to 2 times.",
+            "text": "E4 CD stacks"
+          },
+          "e6ResPen": {
+            "content": "Rin Tohsaka's All-Type RES PEN increases by 20%. When using Ultimate, gains 24 points of \"Gem Energy\" and 1 extra turn.",
+            "text": "E6 RES PEN"
+          },
+          "elegantConduct": {
+            "content": "When Rin Tohsaka is on the field, additionally increases the max number of Skill Points by 2. When entering combat, Rin Tohsaka's ATK increases by 150%, and Quantum RES PEN increases by 15%. If Archer is in the team, Archer also gains this effect.",
+            "text": "Elegant Conduct"
+          },
+          "enhancedSkill": {
+            "content": "If Rin Tohsaka possesses 15 or more \"Gem Energy\" or if current Skill Points are 7 or more, her Skill is enhanced into \"Second Magic Experiment.\"",
+            "text": "Enhanced Skill"
+          },
+          "enhancedSkillSpConsumed": {
+            "content": "Consumes 3 points of \"Gem Energy\" to deal additional Quantum DMG to one random enemy target. This repeats until \"Gem Energy\" is less than 3 or there are no enemy targets with current HP greater than 0, up to a maximum of 33 times. When used, if current Skill Points are greater than 2, consumes Skill Points until there are 2 points left, immediately gaining 2 points of \"Gem Energy\" for every 1 Skill Point consumed.",
+            "text": "Enhanced Skill SP consumed"
+          },
+          "ladylikePoise": {
+            "content": "When entering combat and after using Enhanced Skill, Rin Tohsaka's SPD increases by 20%, lasting for 3 turns.",
+            "text": "SPD buff"
+          },
+          "skillBounces": {
+            "content": "Consumes 3 points of \"Gem Energy\" to deal additional Quantum DMG to one random enemy target. This repeats until \"Gem Energy\" is less than 3 or there are no enemy targets with current HP greater than 0, up to a maximum of 33 times. When used, if current Skill Points are greater than 2, consumes Skill Points until there are 2 points left, immediately gaining 2 points of \"Gem Energy\" for every 1 Skill Point consumed.",
+            "text": "Skill bounces"
+          },
+          "talentCdBuff": {
+            "content": "When an ally target consumes or recovers Skill Points, increases their CRIT DMG by {{TalentCdBuff}}% for 2 turns.",
+            "text": "Talent CD buff"
+          },
+          "ultDmgTakenDebuff": {
+            "content": "When Rin Tohsaka uses her ultimate, recovers 1 Skill Points for allies, and increases the DMG taken by all enemies by {{UltVulnerability}}% for 3 turns.",
+            "text": "Ult Vulnerability"
+          }
+        }
+      },
       "Robin": {
         "Content": {
           "concertoActive": {
@@ -2403,26 +2501,6 @@ interface Resources {
           }
         }
       },
-      "Seele": {
-        "Content": {
-          "buffedState": {
-            "content": "Enters the buffed state upon defeating an enemy with Basic ATK, Skill, or Ultimate, and receives an extra turn. While in the buffed state, the DMG of Seele's attacks increases by {{buffedStateDmgBuff}}% for 1 turn.::BR::While Seele is in the buffed state, her Quantum RES PEN increases by 20%.",
-            "text": "Buffed state"
-          },
-          "e1EnemyHp80CrBoost": {
-            "content": "When dealing DMG to an enemy whose HP percentage is 80% or lower, CRIT Rate increases by 15%.",
-            "text": "E1 enemy HP ≤ 80% CR boost"
-          },
-          "e6UltTargetDebuff": {
-            "content": "After Seele uses her Ultimate, inflict the target enemy with Butterfly Flurry for 1 turn. Enemies suffering from Butterfly Flurry will take Additional Quantum DMG equal to 15% of Seele's Ultimate DMG every time they are attacked.",
-            "text": "E6 Butterfly Flurry"
-          },
-          "speedBoostStacks": {
-            "content": "After using her skill, Seele's SPD increases by 25% for 2 turns.::BR::E2: The SPD Boost effect of Seele's Skill can stack up to 2 times.",
-            "text": "Speed buff stacks"
-          }
-        }
-      },
       "SeeleB1": {
         "Content": {
           "buffedState": {
@@ -2456,30 +2534,6 @@ interface Resources {
           "targetShocked": {
             "content": "After Serval attacks, deals Additional Lightning DMG equal to {{talentExtraDmgScaling}}% of Serval's ATK to all Shocked enemies.",
             "text": "Target shocked"
-          }
-        }
-      },
-      "SilverWolf": {
-        "Content": {
-          "skillResShredDebuff": {
-            "content": "Decreases the target's All-Type RES of the enemy by {{skillResShredValue}}% for 2 turns.::BR::If there are 3 or more debuffs affecting the enemy when the Skill is used, then the Skill decreases the enemy's All-Type RES by an additional 3%.",
-            "text": "Skill RES shred"
-          },
-          "skillWeaknessResShredDebuff": {
-            "content": "There is a {{implantChance}}% base chance to add 1 Weakness of an on-field character's Type to the target enemy. This also reduces the enemy's DMG RES to that Weakness Type by 20% for 2 turns. If the enemy already has that Type Weakness, the effect of DMG RES reduction to that Weakness Type will not be triggered.",
-            "text": "Skill weakness implanted RES shred"
-          },
-          "talentDefShredDebuff": {
-            "content": "Silver Wolf's bug reduces the target's DEF by {{talentDefShredDebuffValue}}% for 3 turns.",
-            "text": "Bug DEF shred"
-          },
-          "targetDebuffs": {
-            "content": "If there are 3 or more debuffs affecting the enemy when the Skill is used, then the Skill decreases the enemy's All-Type RES by an additional 3%.::BR::E4: After using her Ultimate to attack enemies, deals Additional Quantum DMG equal to 20% of Silver Wolf's ATK for every debuff currently on the enemy target. This effect can be triggered for a maximum of 5 times during each use of her Ultimate.::BR::E6: For every debuff the target enemy has, the DMG dealt by Silver Wolf increases by 20%, up to a limit of 100%.",
-            "text": "Target debuffs"
-          },
-          "ultDefShredDebuff": {
-            "content": "Decreases the target's DEF by {{ultDefShredValue}}% for 3 turns.",
-            "text": "Ult DEF shred"
           }
         }
       },
@@ -2556,32 +2610,6 @@ interface Resources {
           "spdToElation": {
             "content": "When SPD is 160 or higher, increases this unit's Elation by 50%. For every 1 SPD exceeded, increases this unit's Elation by 2%. Up to a max of 100 excess SPD can be taken into account for this effect.",
             "text": "SPD to Elation conversion"
-          }
-        }
-      },
-      "Sparkle": {
-        "Content": {
-          "cipherBuff": {
-            "content": "When allies with Cipher trigger the DMG Boost effect provided by Sparkle's Talent, each stack additionally increases its effect by {{cipherTalentStackBoost}}%, lasting for 2 turns.::BR::E1: The Cipher effect applied by the Ultimate lasts for 1 extra turn. All allies affected by Cipher have their ATK increased by 40%.",
-            "text": "Cipher buff"
-          },
-          "quantumAlliesAtkBuff": {
-            "content": "When there are 1/2/3 Quantum allies in your team, Quantum-Type allies' ATK are increased by 5%/15%/30%.",
-            "text": "Quantum allies ATK buff"
-          },
-          "skillCdBuff": {
-            "content": "Increases the CRIT DMG of a single ally by {{skillCdBuffScaling}}% of Sparkle's CRIT DMG plus {{skillCdBuffBase}}%, lasting for 1 turn.::BR::E6: The CRIT DMG Boost effect of Sparkle's Skill additionally increases by 30% of Sparkle's CRIT DMG, and when she uses her Skill, the CRIT DMG Boost effect will apply to all allies currently with Cipher. When Sparkle uses her Ultimate, this effect will spread to all allies with Cipher should the allied target have the CRIT DMG increase effect provided by the Skill active on them.",
-            "text": "Skill CD buff"
-          },
-          "talentStacks": {
-            "content": "Whenever an ally consumes 1 Skill Point, all allies' DMG increases by {{talentBaseStackBoost}}%. This effect lasts for 2 turns and can stack up to 3 times.::BR::E2: Each Talent stack allows allies to ignore 8% of the enemy target's DEF when dealing DMG to enemies.",
-            "text": "Talent DMG stacks"
-          }
-        },
-        "TeammateContent": {
-          "teammateCDValue": {
-            "content": "Increases the CRIT DMG of a single ally by {{skillCdBuffScaling}}% of Sparkle's CRIT DMG plus {{skillCdBuffBase}}%, lasting for 1 turn.",
-            "text": "Sparkle's Combat CD"
           }
         }
       },
@@ -3033,26 +3061,6 @@ interface Resources {
           }
         }
       },
-      "Welt": {
-        "Content": {
-          "e1EnhancedState": {
-            "content": "After Welt uses his Ultimate, his abilities are enhanced. The next 2 times he uses his Basic ATK or Skill, deals Additional DMG to the target equal to 50% of his Basic ATK's DMG multiplier or 80% of his Skill's DMG multiplier respectively.",
-            "text": "E1 enhanced state"
-          },
-          "enemyDmgTakenDebuff": {
-            "content": "When using Ultimate, there is a 100% base chance to increase the DMG received by the targets by 12% for 2 turns.",
-            "text": "Ult vulnerability debuff"
-          },
-          "enemySlowed": {
-            "content": "When hitting an enemy that is already Slowed, Welt deals Additional Imaginary DMG equal to {{talentScaling}}% of his ATK to the enemy.",
-            "text": "Enemy slowed"
-          },
-          "skillExtraHits": {
-            "content": "Deals Imaginary DMG equal to {{skillScaling}}% of Welt's ATK to a single enemy and further deals DMG 2 extra times, with each time dealing Imaginary DMG equal to {{skillScaling}}% of Welt's ATK to a random enemy.",
-            "text": "Skill extra hits on target"
-          }
-        }
-      },
       "WeltB1": {
         "Content": {
           "e1WeightlessAdditionalDmg": {
@@ -3316,6 +3324,14 @@ interface Resources {
           "enemyHpHigherDmgBoost": {
             "content": "The wearer also deals an extra {{DmgBuff}}% of DMG to enemies whose current HP percentage is equal to or higher than the wearer's current HP percentage.",
             "text": "Enemy HP% higher DMG boost"
+          }
+        }
+      },
+      "AStarThatLightsTheNight": {
+        "Content": {
+          "sailStacks": {
+            "content": "Each stack of \"Sail\" increases Assist Skill DMG by {{sailDmgBoost}}%. When \"Sail\" reaches 3 stacks, each stack of \"Sail\" increases Ultimate DMG by {{sailDmgBoost}}%.",
+            "text": "Sail Stacks"
           }
         }
       },
@@ -3627,6 +3643,14 @@ interface Resources {
           }
         }
       },
+      "FlickeringStars": {
+        "Content": {
+          "radiantCrown": {
+            "content": "When any ally character consumes a total of 4 or more Skill Points in a single turn, the wearer gains \"Radiant Crown,\" lasting for 3 turns. While the wearer has \"Radiant Crown,\" all allies' DMG ignores {{DefPen}}% of the target's DEF, and Skill DMG dealt by the wearer increases by {{DmgBoost}}%.",
+            "text": "Radiant Crown"
+          }
+        }
+      },
       "FlowingNightglow": {
         "Content": {
           "cadenzaActive": {
@@ -3711,6 +3735,18 @@ interface Resources {
           }
         }
       },
+      "IAmAsYouBehold": {
+        "Content": {
+          "kingsEntertainment": {
+            "content": "When the wearer enters combat or uses their Ultimate, the wearer gains \"King's Entertainment,\" lasting for 3 turns. While the wearer has \"King's Entertainment,\" increases all allies' CRIT DMG by {{CdBoost}}%.",
+            "text": "King's Entertainment"
+          },
+          "ultimateEnergyDmgBoost": {
+            "content": "When the wearer uses their Ultimate, increases the Ultimate DMG dealt this time by {{DmgBoostStep}}% for every 1 Energy consumed, up to {{MaxDmgBoost}}%.",
+            "text": "Ult Energy DMG boost"
+          }
+        }
+      },
       "IShallBeMyOwnSword": {
         "Content": {
           "eclipseStacks": {
@@ -3756,6 +3792,9 @@ interface Resources {
           "skillAtkBoost": {
             "content": "When the wearer uses their Skill, the Effect Hit Rate for this attack increases by {{EhrBuff}}%, and ATK increases by {{AtkBuff}}%.",
             "text": "Skill ATK boost"
+          },
+          "skillEhrBoost": {
+            "text": "Skill EHR boost"
           }
         }
       },
@@ -4054,6 +4093,14 @@ interface Resources {
           "postUltHealingBoost": {
             "content": "Increases the wearer's Outgoing Healing when they use their Ultimate by {{HealingBoost}}%.",
             "text": "Ult healing boost"
+          }
+        }
+      },
+      "ReforgedInHellfire": {
+        "Content": {
+          "purgatoryState": {
+            "content": "While in the \"Purgatory\" state, the target receives {{cdBuff}}% increased CRIT DMG and {{cdBuff}}% additionally increased CRIT DMG from the wearer.",
+            "text": "CD buffs"
           }
         }
       },
@@ -4931,6 +4978,14 @@ interface Resources {
         "LongName": "Himeko • Nova",
         "Name": "Himeko • Nova"
       },
+      "1512": {
+        "LongName": "Robin • Summeretto",
+        "Name": "Summeretto"
+      },
+      "1513": {
+        "LongName": "Aventurine • Waveflair",
+        "Name": "Waveflair"
+      },
       "8001": {
         "LongName": "Caelus (Destruction)",
         "Name": "Caelus"
@@ -5246,6 +5301,9 @@ interface Resources {
       "21065": {
         "Name": "Today's Good Luck"
       },
+      "21066": {
+        "Name": "A Little Getaway"
+      },
       "22000": {
         "Name": "Before the Tutorial Mission Starts"
       },
@@ -5269,6 +5327,9 @@ interface Resources {
       },
       "22007": {
         "Name": "Tomorrow, Together"
+      },
+      "22008": {
+        "Name": "Race to the Horizon"
       },
       "23000": {
         "Name": "Night on the Milky Way"
@@ -5455,6 +5516,12 @@ interface Resources {
       },
       "23062": {
         "Name": "I Am As You Behold"
+      },
+      "23063": {
+        "Name": "Rise and Sing"
+      },
+      "23064": {
+        "Name": "Summer Rides the Surf"
       },
       "24000": {
         "Name": "On the Fall of an Aeon"
@@ -5755,11 +5822,11 @@ interface Resources {
         "Name": "City of Converging Stars"
       },
       "327": {
-        "Description2pc": "Increases the wearer's CRIT Rate by 7%. When entering combat, if the wearer and another teammate are both Trailblaze Companions characters, increases the wearer's CRIT DMG by 31%.",
+        "Description2pc": "Increases the wearer's CRIT Rate by 8%. When entering combat, if the wearer and another teammate are both Trailblaze Companions characters, increases the wearer's CRIT DMG by 32%.",
         "Name": "Fallen Star Anchorage"
       },
       "328": {
-        "Description2pc": "When entering combat, if the wearer's Max Energy is greater than or equal to 200, increases the wearer's DMG dealt by 0.2% for every 1 point exceeding this value, up to a max increase of 31%.",
+        "Description2pc": "When entering combat, if the wearer's Max Energy is greater than or equal to 200, for every 1 excess point, increases the wearer's DMG dealt by 0.2%, up to a max increase of 32%.",
         "Name": "Cosmic Life Sciences Institute"
       }
     }
@@ -5915,39 +5982,57 @@ interface Resources {
     }
   },
   "hometab": {
-    "CollapseLabels": {
-      "Explore": "Explore the features",
-      "Join": "Join the community"
+    "CommunityCard": {
+      "Changelog": {
+        "Description": "Check out recent updates, new features, and bug fixes.",
+        "Title": "Changelog"
+      },
+      "Discord": {
+        "Description": "Join thousands of players sharing builds, strategies, and optimization tips.",
+        "Title": "Discord"
+      },
+      "Github": {
+        "Description": "Contribute to the project. Bug reports, features, and pull requests welcome.",
+        "Title": "Github"
+      },
+      "Roadmap": {
+        "Description": "See what's planned and in progress on the project board.",
+        "Title": "Roadmap"
+      }
     },
     "CommunityCollapse": "A huge thanks to all our contributors, translators, users, and everyone who provided feedback, for supporting this project and helping to build it together!",
     "Contributors": {
       "Title": "Our Contributors"
     },
-    "FeatureCards": {
-      "BenchmarkGenerator": {
-        "Title": "Benchmark Generator"
+    "FeatureCard": {
+      "Benchmarks": {
+        "Description": "Determine which relic sets and main stats produce the highest damage for your character. Find the optimal substat distribution for each configuration.",
+        "Features": ["Compare main stat and relic combinations head-to-head", "Two tiers: realistic benchmark and perfection builds", "Expandable rows show stats, rolls, and damage breakdown"],
+        "Title": "Build Benchmarks"
       },
-      "Calculator": {
-        "Content": "Calculate damage accurately with fully customizable team setups, buff conditions, and ability rotations to maximize damage output.",
+      "DamageCalculator": {
+        "Description": "Calculate damage accurately with fully customizable team setups, buff conditions, and ability rotations to maximize damage output.",
+        "Features": ["Customize rotations, teammates, and relics", "See the buff breakdown by source and ability", "Easy-to-use presets to get started with"],
         "Title": "Damage Calculator"
       },
-      "LearnMore": "Learn more",
       "Optimizer": {
-        "Content": "Optimize your characters to search for the best combination of relics to reach their breakpoints and maximize their stats.",
-        "Title": "Build Optimizer"
-      },
-      "Organizer": {
-        "Content": "Organize your relics by scoring and sorting relics based on their potential, and find the top relics to upgrade for each character.",
-        "Title": "Relic Organizer"
+        "Description": "Optimize your characters to search for the best combination of relics to reach their breakpoints and maximize their stats.",
+        "Features": ["Find best builds for stats, abilities, or rotation damage", "GPU-accelerated compute at billions of builds per second", "Set up teammate conditional buffs for damage calculations"],
+        "Title": "Optimization Engine"
       },
       "RarityAnalysis": {
+        "Description": "Evaluate relic quality using character-specific substat weights that rank each piece against its theoretical maximum.",
+        "Features": ["Estimate days of farming needed to replace a relic", "Visualize high, mid, and low rolls across your substats", "See the reroll dice potential for each piece"],
         "Title": "Rarity Analysis"
       },
       "Showcase": {
-        "Content": "Showcase your character’s stats or prebuild future characters. Simulate their combat damage with DPS score and measure it against the benchmarks.",
+        "Description": "Showcase and share your character's stats or prebuild future characters. Simulate combat damage with DPS score and measure it against the benchmarks.",
+        "Features": ["Full stats display with DPS Score and stats analysis", "Configure teammate buffs for accurate scoring", "Simulate unreleased character stats on current relics"],
         "Title": "Character Showcase"
       },
-      "WarpPlanner": {
+      "Warp": {
+        "Description": "Calculate exact success probabilities for character and light cone banner targets, with pity counters, starlight refunds, and predicted future resources.",
+        "Features": ["Shows expected average warps needed for each target", "Per-patch income tracking for F2P and spending tiers", "Calculates starlight refund from duplicate trades"],
         "Title": "Warp Planner"
       }
     },
@@ -5962,8 +6047,7 @@ interface Resources {
       "Message": "Invalid input - This should be your 9 digit ingame UUID",
       "Placeholder": "UID",
       "Search": "Search"
-    },
-    "Welcome": "Welcome to the<1/>Fribbels Star Rail Optimizer"
+    }
   },
   "importSaveTab": {
     "ClearData": {
@@ -5994,6 +6078,7 @@ interface Resources {
         "Disconnected": "Disconnected",
         "DisconnectedHint": "Unable to connect to the scanner. Please check that it is running.",
         "Enable": "Enable Live Import (Recommended)",
+        "ImportDisabledHint": "Disabled while Live Import is on - the scanner is already syncing your inventory. Turn it off below to import manually.",
         "OnlyExistingCharacters": "Only update existing characters",
         "OnlyExistingCharactersTooltip": "Prevents live import from adding characters that are not already in the Characters tab.",
         "Title": "Live Import Controls",
@@ -6412,37 +6497,6 @@ interface Resources {
         "NoneSaved": "No saved builds"
       }
     },
-    "Calculators": {
-      "AHA": {
-        "Input": {
-          "DesiredAha": "Target Aha SPD",
-          "TeammateSpeeds": "Elation teammate speeds"
-        },
-        "Label": "Aha Speed",
-        "Output": {
-          "AhaSpeed": "Aha's Speed",
-          "Teammate0": "1st Teammate's SPD",
-          "Teammate1": "2nd Teammate's SPD",
-          "Teammate2": "3rd Teammate's SPD",
-          "Teammate3": "4th Teammate's SPD"
-        }
-      },
-      "EHR": {
-        "Input": {
-          "Attempts": "Application attempts",
-          "BaseChance": "Debuff base chance",
-          "DebuffRes": "Enemy debuff RES",
-          "DesiredHitRate": "Target debuff chance",
-          "EffectRes": "Enemy effect RES",
-          "HitRate": "Effect Hit Rate"
-        },
-        "Label": "Effect Hit Rate",
-        "Output": {
-          "ApplicationRate": "Chance to apply",
-          "RequiredHitRate": "Required EHR"
-        }
-      }
-    },
     "CharacterSelect": {
       "ClearButton": "Clear",
       "ExcludeButton": "Exclude all",
@@ -6692,6 +6746,7 @@ interface Resources {
         "MemoSkill": "Skillᴹ",
         "MemoTalent": "Talentᴹ",
         "None": "None",
+        "Placeholder": "Ability",
         "Skill": "Skill",
         "SkillHeal": "Skill HEAL",
         "SkillShield": "Skill SHIELD",
@@ -6744,6 +6799,50 @@ interface Resources {
           "S.Break": "S.Break"
         },
         "DefaultAction": "Default",
+        "EnemyConfiguration": {
+          "Broken": "Weakness broken",
+          "Efres": "Effect RES",
+          "Enemy": "Enemy",
+          "Header": "ENEMY",
+          "Level": "Enemy level",
+          "Res": "DMG RES",
+          "Targets": "Targets",
+          "Toughness": "Toughness",
+          "Weakness": "Elemental weakness"
+        },
+        "HitDefinition": {
+          "Additional": {
+            "CdOverride": "CD Override",
+            "CrOverride": "CR Override"
+          },
+          "AtkScaling": "ATK Scaling",
+          "Break": {
+            "SpecialScaling": "Special Scaling"
+          },
+          "Crit": {
+            "BeCap": "BE Cap",
+            "BeScaling": "BE Scaling",
+            "ElationAtkScaling": "Elation ATK Scaling"
+          },
+          "DefScaling": "DEF Scaling",
+          "Dot": {
+            "Chance": "DoT Chance",
+            "Split": "DoT Split",
+            "Stacks": "DoT Stacks"
+          },
+          "Elation": {
+            "Banger": "Certified Banger Stacks",
+            "Punchline": "Punchline Stacks",
+            "Scaling": "Elation Scaling"
+          },
+          "FixedToughness": "Fixed Toughness",
+          "HpScaling": "HP Scaling",
+          "SuperBreak": {
+            "ExtraModifier": "Extra Modifier"
+          },
+          "Toughness": "Toughness DMG",
+          "TrueDmg": "True DMG modifier"
+        },
         "Sources": {
           "Basic": "Basic",
           "E1": "E1",
@@ -7110,9 +7209,6 @@ interface Resources {
       },
       "PriorityFilter": "Character priority filter"
     },
-    "OrnamentSetSelector": {
-      "Placeholder": "Ornament set"
-    },
     "Presets": {
       "AaSpdValues": {
         "SPD120": "120.000 SPD - 6 turns in first two cycles",
@@ -7143,12 +7239,6 @@ interface Resources {
         "SPD200": "200.000 SPD - 3 actions in first cycle"
       },
       "StandardLabel": "Standard $t(gameData:Characters.{{id}}.Name)"
-    },
-    "RelicSetSelector": {
-      "2+2pcLabel": "2 + 2 Piece",
-      "2pcLabel": "2 + Any",
-      "4pcLabel": "4 Piece",
-      "Placeholder": "Relic set"
     },
     "ResultLimitN": "Find top {{limit}} results",
     "SetConditionals": {
@@ -7292,6 +7382,22 @@ interface Resources {
       },
       "SetName": "$t(gameData:RelicSets.{{id}}.Name)",
       "Title": "Conditional set effects"
+    },
+    "SetFilters": {
+      "2pcLabel": "2-Piece",
+      "4pcLabel": "4-Piece",
+      "AnyTag": "Any",
+      "Clear": "Clear All",
+      "Done": "Done",
+      "OrnamentListHeader": "Ornament Sets",
+      "OrnamentPlaceholder": "Ornament set filters",
+      "OrnamentSelectedPlaceholder": "Ornaments",
+      "RelicListHeader": "Relic Sets",
+      "RelicPlaceholder": "Relic set filters",
+      "RelicSelectedPlaceholder": "Relics",
+      "Revert": "Revert",
+      "SearchPlaceholder": "Search sets...",
+      "SelectedHeader": "Selected Sets"
     },
     "Sets": "Sets",
     "Sidebar": {
@@ -7457,72 +7563,58 @@ interface Resources {
       "TeammateSets": {
         "Ageless": {
           "Desc": "$t(gameData:RelicSets.302.Name) (+8% ATK)",
-          "Set": "$t(gameData:RelicSets.302.Name)",
           "Text": "8% ATK"
         },
         "Amphoreus": {
           "Desc": "$t(gameData:RelicSets.323.Name) (+8% SPD)",
-          "Set": "$t(gameData:RelicSets.323.Name)",
           "Text": "8% SPD"
         },
         "CityOfConvergingStars": {
           "Desc": "$t(gameData:RelicSets.326.Name) (+12% CD)",
-          "Set": "$t(gameData:RelicSets.326.Name)",
           "Text": "12% CD"
         },
         "Diviner": {
           "Desc": "4 Piece: $t(gameData:RelicSets.130.Name) (+10% Elation)",
-          "Set": "$t(gameData:RelicSets.130.Name)",
           "Text": "10% Elation"
         },
         "Keel": {
           "Desc": "$t(gameData:RelicSets.310.Name) (+10% CD)",
-          "Set": "$t(gameData:RelicSets.310.Name)",
           "Text": "10% CD"
         },
         "Lushaka": {
           "Desc": "$t(gameData:RelicSets.317.Name) (+12% ATK)",
-          "Set": "$t(gameData:RelicSets.317.Name)",
           "Text": "12% ATK"
         },
         "Messenger": {
           "Desc": "4 Piece: $t(gameData:RelicSets.114.Name) (+12% SPD)",
-          "Set": "$t(gameData:RelicSets.114.Name)",
           "Text": "12% SPD"
         },
         "Penacony": {
           "Desc": "$t(gameData:RelicSets.312.Name) (+10% DMG for same element)",
-          "Set": "$t(gameData:RelicSets.312.Name)",
           "Text": "10% DMG"
         },
         "Sacerdos1Stack": {
           "Desc": "4 Piece: $t(gameData:RelicSets.121.Name) (+18% CD)",
-          "Set": "$t(gameData:RelicSets.121.Name)",
           "Text": "18% CD"
         },
         "Sacerdos2Stack": {
           "Desc": "4 Piece: $t(gameData:RelicSets.121.Name) (+36% CD)",
-          "Set": "$t(gameData:RelicSets.121.Name)",
           "Text": "36% CD"
         },
         "SelfEnshrouded": {
           "Desc": "4 Piece: $t(gameData:RelicSets.128.Name) (+15% CD)",
-          "Set": "$t(gameData:RelicSets.128.Name)",
           "Text": "15% CD"
         },
         "Warrior": {
           "Desc": "4 Piece: $t(gameData:RelicSets.125.Name) (+15% CD)",
-          "Set": "$t(gameData:RelicSets.125.Name)",
           "Text": "15% CD"
         },
         "Watchmaker": {
           "Desc": "4 Piece: $t(gameData:RelicSets.118.Name) (+30% BE)",
-          "Set": "$t(gameData:RelicSets.118.Name)",
           "Text": "30% BE"
         },
         "WorldRemaking": {
           "Desc": "4 Piece: $t(gameData:RelicSets.127.Name) (+15% DMG)",
-          "Set": "$t(gameData:RelicSets.127.Name)",
           "Text": "15% DMG"
         }
       },
@@ -7932,5 +8024,3 @@ interface Resources {
     "TotalAvailable": "Total warps available:"
   }
 }
-
-export default Resources;

@@ -1,4 +1,5 @@
 import { KafkaB1 } from 'lib/conditionals/character/1000/KafkaB1'
+import { HuohuoB1 } from 'lib/conditionals/character/1200/HuohuoB1'
 import { Hysilens } from 'lib/conditionals/character/1400/Hysilens'
 import { PermansorTerrae } from 'lib/conditionals/character/1400/PermansorTerrae'
 import {
@@ -8,6 +9,7 @@ import {
   createEnum,
 } from 'lib/conditionals/conditionalUtils'
 import { HitDefinitionBuilder } from 'lib/conditionals/hitDefinitionBuilder'
+import { NightOfFright } from 'lib/conditionals/lightcone/5star/NightOfFright'
 import { PatienceIsAllYouNeed } from 'lib/conditionals/lightcone/5star/PatienceIsAllYouNeed'
 import { ReforgedRemembrance } from 'lib/conditionals/lightcone/5star/ReforgedRemembrance'
 import { ThoughWorldsApart } from 'lib/conditionals/lightcone/5star/ThoughWorldsApart'
@@ -310,6 +312,7 @@ if (${wgslTrue(r.ehrToDmgBoost)}) {
 }
 
 const simulation = (): SimulationMetadata => ({
+  leaderboardEnabled: true,
   parts: {
     [Parts.Body]: [
       Stats.EHR,
@@ -334,9 +337,9 @@ const simulation = (): SimulationMetadata => ({
     Stats.CR,
     Stats.CD,
   ],
-  breakpoints: {
-    [Stats.EHR]: 1.20,
-  },
+  softBreakpoints: [
+    { stat: Stats.EHR, threshold: 1.20 },
+  ],
   comboTurnAbilities: [
     NULL_TURN_ABILITY_NAME,
     START_ULT,
@@ -376,6 +379,22 @@ const simulation = (): SimulationMetadata => ({
       lightCone: ThoughWorldsApart.id,
       characterEidolon: 0,
       lightConeSuperimposition: 1,
+    },
+  ],
+  leaderboardTeams: [
+    {
+      teammates: [
+        { characterId: KafkaB1.id, lightCones: [PatienceIsAllYouNeed.id] },
+        { characterId: Hysilens.id, lightCones: [WhyDoesTheOceanSing.id] },
+        { characterId: PermansorTerrae.id, lightCones: [ThoughWorldsApart.id] },
+      ],
+    },
+    {
+      teammates: [
+        { characterId: KafkaB1.id, lightCones: [PatienceIsAllYouNeed.id] },
+        { characterId: Hysilens.id, lightCones: [WhyDoesTheOceanSing.id] },
+        { characterId: HuohuoB1.id, lightCones: [NightOfFright.id] },
+      ],
     },
   ],
 })
@@ -422,6 +441,7 @@ const scoring = (): ScoringMetadata => ({
     SortOption.FUA,
   ],
   simulation: simulation(),
+  eidolonImage: 3,
 })
 
 const display = {
@@ -430,7 +450,7 @@ const display = {
     y: 934,
     z: 1.3,
   },
-  showcaseColor: '#a37df4',
+  showcaseColor: '#b4a0d5',
 }
 
 export const BlackSwanB1: CharacterConfig = {

@@ -1,0 +1,64 @@
+import type { LeaderboardConfigType } from 'leaderboard/shared/configTypeMapping'
+import type { CharacterId } from 'types/character'
+
+export const TIMELINE_SCHEMA_VERSION = 2
+export const TIMELINE_MIN_SCORE = 1.5
+
+export enum TimelineEventType {
+  NEW_BEST = 'new_best',
+  NEW_CHARACTER = 'new_character',
+}
+
+export type TimelineNewBestEventBase = {
+  type: TimelineEventType.NEW_BEST,
+  characterId: CharacterId,
+  configType: LeaderboardConfigType,
+  date: string,
+  score: number,
+  previousScore: number,
+  rank: number,
+  previousRank: number,
+  buildId: string,
+}
+
+export type TimelineNewBestEvent = TimelineNewBestEventBase & { candidateId: string }
+
+export type TimelineNewCharacterEventBase = {
+  type: TimelineEventType.NEW_CHARACTER,
+  characterId: CharacterId,
+  configType: LeaderboardConfigType,
+  date: string,
+  score: number,
+  rank: number,
+  entryCount: number,
+  buildId: string,
+}
+
+export type TimelineNewCharacterEvent = TimelineNewCharacterEventBase & { candidateId: string }
+
+export type TimelineEvent = TimelineNewBestEvent | TimelineNewCharacterEvent
+
+export type LeaderboardTimeline = {
+  schemaVersion: number,
+  generatedAt: string,
+  events: TimelineEvent[],
+}
+
+export type LeaderboardSnapshotEntry = {
+  topScore: number,
+  highWatermark: number,
+  rank: number,
+  entryCount: number,
+}
+
+export type UserCharacterWatermark = {
+  highWatermark: number,
+  rank: number,
+}
+
+export type LeaderboardSnapshot = {
+  schemaVersion?: number,
+  generatedAt: string,
+  characters: Record<string, LeaderboardSnapshotEntry>,
+  userBests?: Record<string, UserCharacterWatermark>,
+}

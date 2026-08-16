@@ -1,7 +1,20 @@
 import i18next from 'i18next'
+import {
+  aoe,
+  ashblazingMulti,
+  bounce,
+} from 'lib/conditionals/ashblazingCompute'
+import { Welt } from 'lib/conditionals/character/1000/Welt'
+import { WeltB1 } from 'lib/conditionals/character/1000/WeltB1'
 import { SparkleB1 } from 'lib/conditionals/character/1300/SparkleB1'
 import { Sunday } from 'lib/conditionals/character/1300/Sunday'
 import { PermansorTerrae } from 'lib/conditionals/character/1400/PermansorTerrae'
+import { MortenaxBlade } from 'lib/conditionals/character/1500/MortenaxBlade'
+import { TrailblazerRemembranceStelle } from 'lib/conditionals/character/8000/TrailblazerRemembrance'
+import {
+  boostUltAshblazingAtk,
+  gpuBoostUltAshblazingAtk,
+} from 'lib/conditionals/conditionalFinalizers'
 import {
   AbilityEidolon,
   type Conditionals,
@@ -10,8 +23,11 @@ import {
 } from 'lib/conditionals/conditionalUtils'
 import { HitDefinitionBuilder } from 'lib/conditionals/hitDefinitionBuilder'
 import { DanceDanceDance } from 'lib/conditionals/lightcone/4star/DanceDanceDance'
+import { FlyIntoAPinkTomorrow } from 'lib/conditionals/lightcone/4star/FlyIntoAPinkTomorrow'
 import { AGroundedAscent } from 'lib/conditionals/lightcone/5star/AGroundedAscent'
 import { AStarThatLightsTheNight } from 'lib/conditionals/lightcone/5star/AStarThatLightsTheNight'
+import { InTheNameOfTheWorld } from 'lib/conditionals/lightcone/5star/InTheNameOfTheWorld'
+import { ReforgedInHellfire } from 'lib/conditionals/lightcone/5star/ReforgedInHellfire'
 import { ThoughWorldsApart } from 'lib/conditionals/lightcone/5star/ThoughWorldsApart'
 import {
   CURRENT_DATA_VERSION,
@@ -43,6 +59,8 @@ import {
   SPREAD_ORNAMENTS_2P_GENERAL_CONDITIONALS,
   SPREAD_RELICS_4P_GENERAL_CONDITIONALS,
 } from 'lib/scoring/scoringConstants'
+import { wrappedFixedT } from 'lib/utils/i18nUtils'
+import { precisionRound } from 'lib/utils/mathUtils'
 import { type Eidolon } from 'types/character'
 import { type CharacterConfig } from 'types/characterConfig'
 import { type CharacterConditionalsController } from 'types/conditionals'
@@ -64,6 +82,7 @@ export const HimekoNovaAbilities: AbilityKind[] = [
 ]
 
 const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsController => {
+  const t = wrappedFixedT(withContent).get(null, 'conditionals', 'Characters.HimekoNova.Content')
   const betaContent = i18next.t('BetaMessage', { ns: 'conditionals', Version: CURRENT_DATA_VERSION })
   const { basic, skill, ult, talent } = AbilityEidolon.ULT_BASIC_3_SKILL_TALENT_5
   const {
@@ -102,13 +121,56 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
   const decimationCdValue = skill(e, 1.00, 1.10)
   const decimationSkillCdValue = skill(e, 1.00, 1.10)
 
+  // const maxSourceEnergy = e >= 6 ? 6 : 3
+  const sourceEnergy = e >= 6 ? 6 : 3 // Math.min(r.sourceEnergyStacks, maxSourceEnergy)
+
+  // Himenova ult sequence is
+  // Orbital Annihilation Pulse - AOE(ultOrbitalAoeScaling) + Bounce(sourceEnergy * ultOrbitalRandomScaling)
+  // Hyperluminal Particle Beam - AOE(ultBeamScaling)
+  // Hyperluminal Particle Beam - AOE(ultBeamScaling)
+  // Hyperluminal Particle Beam - AOE(ultBeamScaling)
+  // Orbital Annihilation Pulse - AOE(ultOrbitalAoeScaling) + Bounce(sourceEnergy * ultOrbitalRandomScaling)
+  // Hyperluminal Particle Beam - AOE(ultBeamScaling)
+  // Hyperluminal Particle Beam - AOE(ultBeamScaling)
+  // Hyperluminal Particle Beam - AOE(ultBeamScaling)
+  // Orbital Annihilation Pulse - AOE(ultOrbitalAoeScaling) + Bounce(sourceEnergy * ultOrbitalRandomScaling)
+  // Final hit                  - Bounce 3 * ultFinalHitScaling
+
+  // for E6 Himeko:
+  // sequencing is reliant on getting 3 external sourceEnergy between each ult, not guaranteed but should be consistent
+  // Pulses get an extra AOE hit:
+  //   When launching "Orbital Annihilation Pulse," if the current "Source Energy" is 6 point(s) or more,
+  //   additionally deals Fire DMG equal to 160% of Himeko • Nova's ATK to all enemies 1 time.
+
+  const pulseHits = [
+    aoe(ultOrbitalAoeScaling),
+    bounce(ultOrbitalRandomScaling, sourceEnergy),
+  ]
+  if (e >= 6) pulseHits.push(aoe(ultE6OrbitalScaling))
+
+  const beamHit = aoe(ultBeamScaling)
+
+  const finalHitHit = bounce(ultFinalHitScaling, 3)
+
+  const ultHitMulti = ashblazingMulti([
+    ...pulseHits,
+    beamHit,
+    beamHit,
+    beamHit,
+    ...pulseHits,
+    beamHit,
+    beamHit,
+    beamHit,
+    ...pulseHits,
+    finalHitHit,
+  ])
+
   const defaults = {
     navigatorsSemaphore: true,
     selfUseAssistSkill: true,
     assistSkillBuff: true,
     companionVerdict: true,
     companionDecimation: false,
-    sourceEnergyStacks: 3,
     e4ResPen: true,
     e6: true,
   }
@@ -124,53 +186,54 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
     navigatorsSemaphore: {
       id: 'navigatorsSemaphore',
       formItem: 'switch',
-      text: 'Navigator\'s Semaphore',
-      content: betaContent,
+      text: t('navigatorsSemaphore.text'),
+      content: t('navigatorsSemaphore.content', { SemaphoreDmgBoost: precisionRound(100 * skillDmgBuffValue) }),
     },
     selfUseAssistSkill: {
       id: 'selfUseAssistSkill',
       formItem: 'switch',
-      text: 'Self use Assist Skill',
-      content: betaContent,
+      text: t('selfUseAssistSkill.text'),
+      content: t('selfUseAssistSkill.content'),
     },
     assistSkillBuff: {
       id: 'assistSkillBuff',
       formItem: 'switch',
-      text: 'Assist Skill buff',
-      content: betaContent,
+      text: t('assistSkillBuff.text'),
+      content: t('assistSkillBuff.content', {
+        AssistSkillResPen: precisionRound(100 * talentResPenValue),
+        AssistSkillCdBuff: precisionRound(100 * talentCdBuffValue),
+      }),
     },
     companionVerdict: {
       id: 'companionVerdict',
       formItem: 'switch',
-      text: 'Companion Protocol: Verdict',
-      content: betaContent,
+      text: t('companionVerdict.text'),
+      content: t('companionVerdict.content', {
+        VerdictDmgBuff: precisionRound(100 * verdictDmgBoostValue),
+        VerdictUltDmgBuff: precisionRound(100 * verdictUltDmgBoostValue),
+      }),
     },
     companionDecimation: {
       id: 'companionDecimation',
       formItem: 'switch',
-      text: 'Companion Protocol: Decimation',
-      content: betaContent,
-    },
-    sourceEnergyStacks: {
-      id: 'sourceEnergyStacks',
-      formItem: 'slider',
-      text: 'Source Energy stacks',
-      content: betaContent,
-      min: 0,
-      max: e >= 6 ? 6 : 3,
+      text: t('companionDecimation.text'),
+      content: t('companionDecimation.content', {
+        DecimationCdBuff: precisionRound(100 * decimationCdValue),
+        DecimationSkillCdBuff: precisionRound(100 * decimationSkillCdValue),
+      }),
     },
     e4ResPen: {
       id: 'e4ResPen',
       formItem: 'switch',
-      text: 'E4 team RES PEN',
-      content: betaContent,
+      text: t('e4ResPen.text'),
+      content: t('e4ResPen.content'),
       disabled: e < 4,
     },
     e6: {
       id: 'e6',
       formItem: 'switch',
-      text: 'E6 buffs',
-      content: betaContent,
+      text: t('e6.text'),
+      content: t('e6.content'),
       disabled: e < 6,
     },
   }
@@ -200,16 +263,17 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
     actionDeclaration: () => [...HimekoNovaAbilities],
     actionDefinition: (action: OptimizerAction, context: OptimizerContext) => {
       const r = action.characterConditionals as Conditionals<typeof content>
-
-      const maxSourceEnergy = e >= 6 ? 6 : 3
-      const sourceEnergy = Math.min(r.sourceEnergyStacks, maxSourceEnergy)
       const a6Multiplier = sourceEnergy >= 3 ? 0.30 : 0
 
-      const ultAtkScaling = ultBeamScaling * 6
-        + ultOrbitalAoeScaling * sourceEnergy
+      const pulseScaling = ultOrbitalAoeScaling
         + (ultOrbitalRandomScaling + a6Multiplier) * sourceEnergy / context.enemyCount
-        + ultFinalHitScaling * 3 / context.enemyCount
-        + ((e >= 6 && r.e6 && sourceEnergy >= 6) ? ultE6OrbitalScaling : 0)
+        + (e >= 6 && r.e6 && sourceEnergy >= 6 ? ultE6OrbitalScaling : 0)
+      const beamScaling = ultBeamScaling
+      const finalHitScaling = ultFinalHitScaling * 3 / context.enemyCount
+
+      const ultAtkScaling = finalHitScaling
+        + pulseScaling * 3
+        + beamScaling * 6
 
       return {
         [AbilityKind.BASIC]: {
@@ -295,14 +359,18 @@ const conditionals = (e: Eidolon, withContent: boolean): CharacterConditionalsCo
     },
 
     finalizeCalculations: (x: ComputedStatsContainer, action: OptimizerAction, context: OptimizerContext) => {
+      boostUltAshblazingAtk(x, action, ultHitMulti(context))
     },
-    newGpuFinalizeCalculations: (action: OptimizerAction, context: OptimizerContext) => '',
+    newGpuFinalizeCalculations: (action: OptimizerAction, context: OptimizerContext) => {
+      return gpuBoostUltAshblazingAtk(action, ultHitMulti(context))
+    },
 
     dynamicConditionals: [],
   }
 }
 
 const simulation = (): SimulationMetadata => ({
+  leaderboardEnabled: true,
   parts: {
     [Parts.Body]: [
       Stats.CR,
@@ -364,6 +432,29 @@ const simulation = (): SimulationMetadata => ({
       lightConeSuperimposition: 1,
     },
   ],
+  leaderboardTeams: [
+    {
+      teammates: [
+        { characterId: MortenaxBlade.id, lightCones: [ReforgedInHellfire.id] },
+        { characterId: WeltB1.id, lightCones: [InTheNameOfTheWorld.id] },
+        { characterId: PermansorTerrae.id, lightCones: [ThoughWorldsApart.id] },
+      ],
+    },
+    {
+      teammates: [
+        { characterId: MortenaxBlade.id, lightCones: [ReforgedInHellfire.id] },
+        { characterId: TrailblazerRemembranceStelle.id, lightCones: [FlyIntoAPinkTomorrow.id] },
+        { characterId: PermansorTerrae.id, lightCones: [ThoughWorldsApart.id] },
+      ],
+    },
+    {
+      teammates: [
+        { characterId: MortenaxBlade.id, lightCones: [ReforgedInHellfire.id] },
+        { characterId: Sunday.id, lightCones: [AGroundedAscent.id] },
+        { characterId: PermansorTerrae.id, lightCones: [ThoughWorldsApart.id] },
+      ],
+    },
+  ],
 })
 
 const scoring = (): ScoringMetadata => ({
@@ -407,13 +498,13 @@ const scoring = (): ScoringMetadata => ({
   sortOption: SortOption.ULT,
   hiddenColumns: [SortOption.FUA, SortOption.DOT],
   simulation: simulation(),
+  eidolonImage: 4,
 })
 
 const display = {
-  // TODO: placeholder image coordinates
   imageCenter: { x: 902, y: 928, z: 1.25 },
   spineCenter: { x: 914, y: 969, z: 1.25 },
-  showcaseColor: '#b584e8',
+  showcaseColor: '#b498d3',
 }
 
 export const HimekoNova: CharacterConfig = {

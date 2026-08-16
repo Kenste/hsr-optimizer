@@ -1,6 +1,5 @@
 import {
   Accordion,
-  Alert,
   Button,
   Checkbox,
   Divider,
@@ -15,14 +14,12 @@ import {
   IconRefresh,
   IconUpload,
 } from '@tabler/icons-react'
-import { AppPages } from 'lib/constants/appPages'
 import {
   type HoyolabData,
   hoyolabParser,
 } from 'lib/importer/hoyoLabFormatParser'
 import {
   KelzScannerConfig,
-  ReliquaryArchiverConfig,
   ScannerSourceToParser,
   ValidScannerSources,
 } from 'lib/importer/importConfig'
@@ -36,10 +33,19 @@ import {
   getCharacters,
 } from 'lib/stores/character/characterStore'
 import {
+  AppPages,
+} from 'lib/tabs/navigation/constants'
+import { navigateTo } from 'lib/tabs/navigation/utils'
+import {
   importerTabButtonWidth,
   importerTabSpinnerMs,
 } from 'lib/tabs/tabImport/importerTabUiConstants'
 import { ReliquaryDescription } from 'lib/tabs/tabImport/ReliquaryDescription'
+import classes from 'lib/tabs/tabImport/ScannerImportSubmenu.module.css'
+import {
+  DEFAULT_WEBSOCKET_URL,
+  useScannerState,
+} from 'lib/tabs/tabImport/ScannerWebsocketClient'
 import { ColorizedLinkWithIcon } from 'lib/ui/ColorizedLink'
 import {
   useRef,
@@ -50,11 +56,6 @@ import type { CharacterId } from 'types/character'
 import type { Form } from 'types/form'
 import type { Relic } from 'types/relic'
 import { useShallow } from 'zustand/react/shallow'
-import classes from './ScannerImportSubmenu.module.css'
-import {
-  DEFAULT_WEBSOCKET_URL,
-  useScannerState,
-} from './ScannerWebsocketClient'
 
 type ParsedCharacter = {
   characterId: CharacterId,
@@ -241,7 +242,7 @@ export function ScannerImportSubmenu() {
                 <ColorizedLinkWithIcon
                   text={t('Import.Stage1.ScorerDesc.Link')}
                   linkIcon={true}
-                  onClick={() => useGlobalStore.getState().setActiveKey(AppPages.SHOWCASE)}
+                  onClick={() => navigateTo(AppPages.SHOWCASE)}
                 />
                 )
                 <ul>
@@ -265,53 +266,62 @@ export function ScannerImportSubmenu() {
             </ul>
           </div>
           <Flex direction='column' align='flex-start'>
-            <Flex gap={10} align='center'>
-              <input
-                type='file'
-                accept='.json'
-                ref={fileInputRef}
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) {
-                    beforeUpload(file)
-                  }
-                  e.target.value = ''
-                }}
-              />
-              <Button
-                disabled={isLiveImporting}
-                style={{ width: importerTabButtonWidth }}
-                leftSection={<IconUpload size={16} />}
-                loading={loading1}
-                onClick={() => {
-                  setCurrentStage(Stages.LOAD_FILE)
-                  fileInputRef.current?.click()
-                }}
-                variant='default'
-              >
-                {t('Import.Stage1.ButtonText')}
-              </Button>
+            {/* Wrap the row (not the disabled controls) so the hint still shows on hover */}
+            <Tooltip
+              label={t('Import.LiveImport.ImportDisabledHint')}
+              disabled={!isLiveImporting}
+              multiline
+              w={280}
+              position='top'
+            >
+              <Flex gap={10} align='center'>
+                <input
+                  type='file'
+                  accept='.json'
+                  ref={fileInputRef}
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      beforeUpload(file)
+                    }
+                    e.target.value = ''
+                  }}
+                />
+                <Button
+                  disabled={isLiveImporting}
+                  style={{ width: importerTabButtonWidth }}
+                  leftSection={<IconUpload size={16} />}
+                  loading={loading1}
+                  onClick={() => {
+                    setCurrentStage(Stages.LOAD_FILE)
+                    fileInputRef.current?.click()
+                  }}
+                  variant='default'
+                >
+                  {t('Import.Stage1.ButtonText')}
+                </Button>
 
-              {t('Import.Stage1.Or')}
+                {t('Import.Stage1.Or')}
 
-              <TextInput
-                style={{ width: importerTabButtonWidth }}
-                className='centered-placeholder'
-                placeholder={t('Import.Stage1.Placeholder')}
-                value=''
-                disabled={loading1 || isLiveImporting}
-                onChange={(e) => {
-                  const text = e.target.value
-                  try {
-                    JSON.parse(text)
-                    uploadedText(text)
-                  } catch {
-                    // Not valid json, ignore
-                  }
-                }}
-              />
-            </Flex>
+                <TextInput
+                  style={{ width: importerTabButtonWidth }}
+                  className='centered-placeholder'
+                  placeholder={t('Import.Stage1.Placeholder')}
+                  value=''
+                  disabled={loading1 || isLiveImporting}
+                  onChange={(e) => {
+                    const text = e.target.value
+                    try {
+                      JSON.parse(text)
+                      uploadedText(text)
+                    } catch {
+                      // Not valid json, ignore
+                    }
+                  }}
+                />
+              </Flex>
+            </Tooltip>
             <Divider w='100%' my={20} label={t('Import.LiveImport.Title') /* Live Import Controls */} labelPosition='center' />
             <Flex direction='column' gap={10}>
               <div>
@@ -329,33 +339,6 @@ export function ScannerImportSubmenu() {
                 />
                 )
               </div>
-
-              <Alert
-                title='New version notice'
-                color='blue'
-                className={classes.alertNotice}
-              >
-                <div>
-                  If your live import fails to connect, download the new version of{' '}
-                  <ColorizedLinkWithIcon
-                    text={'Reliquary Archiver'}
-                    url={ReliquaryArchiverConfig.releases}
-                    linkIcon={true}
-                  />
-                  {websocketUrl !== DEFAULT_WEBSOCKET_URL && (() => {
-                    try {
-                      return new URL(websocketUrl).port === '53313' && (
-                        <>
-                          <br />
-                          If you have a custom ws url set, the default port has changed from 53313 to 23313.
-                        </>
-                      )
-                    } catch {
-                      return null
-                    }
-                  })()}
-                </div>
-              </Alert>
 
               <Flex gap={10} align='center' flex='1 0'>
                 <Switch

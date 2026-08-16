@@ -1,21 +1,47 @@
+import { readFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
-import { resolve } from 'node:path'
+import type { Plugin } from 'vite'
 import { defineConfig } from 'vite'
+
+function serveLeaderboardJson(): Plugin {
+  return {
+    name: 'serve-leaderboard-json',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url?.startsWith('/hsr-optimizer/leaderboard/') && req.url.endsWith('.json')) {
+          const filename = req.url.replace('/hsr-optimizer/leaderboard/', '')
+          const filePath = join(server.config.root, 'public', 'leaderboard', filename)
+          try {
+            const content = readFileSync(filePath, 'utf-8')
+            res.setHeader('Content-Type', 'application/json')
+            res.end(content)
+          } catch {
+            next()
+          }
+          return
+        }
+        next()
+      })
+    },
+  }
+}
 
 export default defineConfig({
   base: '/hsr-optimizer',
   plugins: [
+    serveLeaderboardJson(),
     react(),
   ],
   resolve: {
     tsconfigPaths: true,
     alias: {
-      'cross-fetch': resolve(__dirname, 'src/lib/utils/nativeFetch.ts'),
+      'cross-fetch': resolve(import.meta.dirname, 'src/lib/utils/nativeFetch.ts'),
       // colorthief/internals barrel includes WasmQuantizer with a broken wasm import.
       // Alias to the specific source modules we need, bypassing the barrel entirely.
-      'colorthief-pipeline': resolve(__dirname, 'node_modules/colorthief/src/pipeline.ts'),
-      'colorthief-swatches': resolve(__dirname, 'node_modules/colorthief/src/swatches.ts'),
-      'colorthief-mmcq': resolve(__dirname, 'node_modules/colorthief/src/quantizers/mmcq.ts'),
+      'colorthief-pipeline': resolve(import.meta.dirname, 'node_modules/colorthief/src/pipeline.ts'),
+      'colorthief-swatches': resolve(import.meta.dirname, 'node_modules/colorthief/src/swatches.ts'),
+      'colorthief-mmcq': resolve(import.meta.dirname, 'node_modules/colorthief/src/quantizers/mmcq.ts'),
     },
   },
   optimizeDeps: {
@@ -68,13 +94,15 @@ export default defineConfig({
     watch: {
       ignored: [
         '**/public/assets/**',
+        '**/public/leaderboard/**',
+        '**/.*/**',
       ],
     },
   },
   test: {
     environment: 'node',
     slowTestThreshold: 500,
-    exclude: [],
+    exclude: ['node_modules/**', 'tests/**'],
     execArgv: ['--no-webstorage'],
   },
   worker: {
